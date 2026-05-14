@@ -1,0 +1,55 @@
+# dependencies
+node_modules
+
+# pnpm
+.pnpm-store
+
+# turbo
+.turbo
+
+# build
+dist
+build
+
+# next
+.next
+out
+
+# coverage
+coverage
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# env
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# TypeScript
+*.tsbuildinfo
+
+# generated
+*.generated.*
+
+# uploads/temp
+tmp
+temp
+
+# nest
+apps/api/uploads
+
+# misc
+.cache
