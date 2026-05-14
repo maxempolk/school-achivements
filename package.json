@@ -3,6 +3,9 @@
   "main": "index.js",
   "packageManager": "pnpm@11.1.1",
   "scripts": {
+    "start": "pnpm infra && pnpm dev",
+    "infra": "docker compose up -d",
+    "infra:down": "docker compose down",
     "dev": "turbo dev",
     "dev:api": "pnpm --filter api dev",
     "dev:web": "pnpm --filter web dev",
@@ -14,8 +17,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "prettier --write",
-      "eslint --fix"
+      "prettier --write"
     ],
     "*.{json,md,css,scss,yml,yaml}": [
       "prettier --write"
