@@ -6,7 +6,7 @@
     "start": "pnpm infra && pnpm dev",
     "infra": "docker compose up -d",
     "infra:down": "docker compose down",
-    "dev": "turbo dev",
+    "dev": "pnpm --filter @school/shared-types build && turbo dev --filter=@school/shared-types --filter=api --filter=web",
     "dev:api": "pnpm --filter api dev",
     "dev:web": "pnpm --filter web dev",
     "build": "turbo build",
@@ -25,6 +25,11 @@
   },
   "keywords": [],
   "type": "module",
+  "pnpm": {
+    "overrides": {
+      "zod": "4.4.3"
+    }
+  },
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^17.0.4",

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Role } from '@prisma/client';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Request } from 'express';
 
 type JwtPayload = {
   sub: number;
@@ -9,11 +10,18 @@ type JwtPayload = {
   role: Role;
 };
 
+const cookieExtractor = (req: Request): string | null => {
+  const cookies = req.cookies as Record<string, unknown> | undefined;
+  const accessToken = cookies?.access_token;
+
+  return typeof accessToken === 'string' ? accessToken : null;
+};
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
       ignoreExpiration: false,
       secretOrKey: 'dev-secret',
     });
