@@ -22,7 +22,7 @@ function CorsSetup(app: INestApplication) {
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
-  console.log('CORS CONFIG', {
+  console.log('CORS CONFIGы', {
     NODE_ENV: process.env.NODE_ENV,
     FRONTEND_URL: process.env.FRONTEND_URL,
     allowedOrigins,

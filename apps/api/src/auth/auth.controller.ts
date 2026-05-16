@@ -49,7 +49,7 @@ export class AuthController {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 1000 * 60 * 60,
     });
     // TODO: нужно ли хранить данные тут?
