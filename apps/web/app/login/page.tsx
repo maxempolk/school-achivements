@@ -15,8 +15,8 @@ import { Label } from '@/components/ui/label';
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { useForm } from 'react-hook-form';
 import { loginSchema, type LoginInput } from '@school/shared-types';
-import { api } from '@/lib/api';
-import { redirect, useRouter } from 'next/navigation';
+import { innerApi } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const {
@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   async function onSubmit(values: LoginInput) {
     try {
-      const response = await api.post('/auth/login', values);
+      await innerApi.post('/api/auth/login', values);
       router.replace('/dashboard');
       router.refresh();
     } catch {

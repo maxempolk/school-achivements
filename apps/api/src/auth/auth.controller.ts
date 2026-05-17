@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -9,7 +9,6 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { type Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -35,27 +34,15 @@ export class AuthController {
     description: 'Invalid email or password.',
   })
   @Post('login')
-  async login(
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Body() dto: LoginDto) {
     const { accessToken } = await this.authService.login(
       dto.email,
       dto.password,
     );
 
-    console.log(accessToken);
-
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60,
-    });
-    // TODO: нужно ли хранить данные тут?
-
     return {
       success: true,
+      accessToken,
     };
   }
 }

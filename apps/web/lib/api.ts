@@ -5,12 +5,17 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+// api.interceptors.request.use((config) => {
+//   const token = localStorage.getItem('accessToken');
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+//   if (token) {
+//     config.headers.Authorization = `Bearer ${token}`;
+//   }
 
-  return config;
+//   return config;
+// });
+
+export const innerApi = axios.create({
+  baseURL: '',
+  withCredentials: true,
 });
