@@ -22,12 +22,6 @@ function CorsSetup(app: INestApplication) {
     .map((origin) => origin.trim().replace(/\/$/, ''))
     .filter(Boolean);
 
-  console.log('CORS CONFIGы', {
-    NODE_ENV: process.env.NODE_ENV,
-    FRONTEND_URL: process.env.FRONTEND_URL,
-    allowedOrigins,
-  });
-
   if (allowedOrigins.length === 0) {
     throw new Error('FRONTEND_URL is required in production');
   }

@@ -1,10 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
+}
+
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.svg"
 }
 
 datasource db {
@@ -15,12 +15,79 @@ enum Role {
   ADMIN
   TEACHER
   STUDENT
-  PARENT
+  // PARENT
 }
 
 model User {
   id       Int    @id @default(autoincrement())
   email    String @unique
   password String
+
   role     Role @default(ADMIN)
+  teacher   Teacher?
+  student   Student?
 }
+
+model Teacher {
+  id        Int    @id @default(autoincrement())
+  userId    Int    @unique
+  firstName String
+  lastName  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessons   Lesson[]
+}
+
+model Student {
+  id        Int    @id @default(autoincrement())
+  userId    Int    @unique
+  classId   Int
+  firstName String
+  lastName  String
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id])
+
+  grades    Grade[]
+}
+
+model Class {
+  id        Int    @id @default(autoincrement())
+  name      String
+  students  Student[]
+  lessons   Lesson[]
+}
+
+model Subject {
+  id        Int    @id @default(autoincrement())
+  name      String // "Mathematics"
+  shortName String? // "Math"
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  teacherId   Int
+  classId     Int
+  subjectId   Int
+  date        DateTime
+  topic       String
+  homework    String?
+  teacher     Teacher @relation(fields: [teacherId], references: [id])
+  class       Class   @relation(fields: [classId], references: [id])
+  subject     Subject @relation(fields: [subjectId], references: [id])
+  grades      Grade[]
+}
+
+model Grade {
+  id        Int      @id @default(autoincrement())
+  lessonId  Int
+  studentId Int
+  value     Int
+  comment   String?
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  @@unique([lessonId, studentId])
+}
+
+// `User`, `Teacher`, `Student`, `Class`, `Subject`

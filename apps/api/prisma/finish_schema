@@ -1,0 +1,368 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================
+// ENUMS
+// =====================
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum WeekType {
+  ODD
+  EVEN
+  EVERY
+}
+
+enum GradeType {
+  CURRENT
+  TEST
+  FINAL
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum NotificationType {
+  GRADE_CREATED
+  GRADE_UPDATED
+  ATTENDANCE_CREATED
+  ATTENDANCE_UPDATED
+  HOMEWORK_CREATED
+  LESSON_UPDATED
+  SYSTEM
+}
+
+// =====================
+// USER PROFILES
+// =====================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  firstName    String
+  lastName     String
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  admin        Admin?
+  teacher      Teacher?
+  student      Student?
+  parent       Parent?
+
+  notifications Notification[]
+
+  @@index([role])
+  @@index([lastName, firstName])
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Teacher {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subjects TeacherSubject[]
+  classes  TeacherClass[]
+
+  classTeacherOf Class[] @relation("ClassTeacher")
+
+  scheduleSlots ScheduleSlot[]
+  gradesCreated Grade[] @relation("GradeCreatedBy")
+
+  @@index([userId])
+}
+
+model Student {
+  id      String @id @default(uuid())
+  userId  String @unique
+  classId String
+
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class   Class  @relation(fields: [classId], references: [id], onDelete: Restrict)
+
+  parents     ParentStudent[]
+  grades      Grade[]
+  attendance  Attendance[]
+
+  @@index([classId])
+  @@index([userId])
+}
+
+model Parent {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  children ParentStudent[]
+
+  @@index([userId])
+}
+
+// =====================
+// SCHOOL STRUCTURE
+// =====================
+
+model Class {
+  id             String @id @default(uuid())
+  name           String
+  gradeLevel     Int
+  classTeacherId String?
+
+  classTeacher Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id], onDelete: SetNull)
+
+  students      Student[]
+  teachers      TeacherClass[]
+  scheduleSlots ScheduleSlot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+  @@index([gradeLevel])
+  @@index([classTeacherId])
+}
+
+model Subject {
+  id        String @id @default(uuid())
+  name      String
+  shortName String?
+
+  teachers      TeacherSubject[]
+  scheduleSlots ScheduleSlot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+  @@unique([shortName])
+}
+
+model Classroom {
+  id       String @id @default(uuid())
+  number   String
+  building String?
+  capacity Int?
+
+  scheduleSlots ScheduleSlot[]
+  lessons       Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([number, building])
+}
+
+// =====================
+// M:N TABLES
+// =====================
+
+model TeacherSubject {
+  teacherId String
+  subjectId String
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([teacherId, subjectId])
+  @@index([subjectId])
+}
+
+model TeacherClass {
+  teacherId String
+  classId   String
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([teacherId, classId])
+  @@index([classId])
+}
+
+model ParentStudent {
+  parentId  String
+  studentId String
+
+  parent  Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([parentId, studentId])
+  @@index([studentId])
+}
+
+// =====================
+// SCHEDULE AND LESSONS
+// =====================
+
+model ScheduleSlot {
+  id          String    @id @default(uuid())
+  classId     String
+  subjectId   String
+  teacherId   String
+  classroomId String
+
+  dayOfWeek DayOfWeek
+  startTime DateTime
+  endTime   DateTime
+  weekType  WeekType  @default(EVERY)
+
+  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject   @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  teacher   Teacher   @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Restrict)
+
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Для быстрых выборок расписания
+  @@index([classId, dayOfWeek])
+  @@index([teacherId, dayOfWeek])
+  @@index([classroomId, dayOfWeek])
+
+  // Частичная защита от полного дубля слота
+  @@unique([classId, dayOfWeek, startTime, weekType])
+  @@unique([teacherId, dayOfWeek, startTime, weekType])
+  @@unique([classroomId, dayOfWeek, startTime, weekType])
+}
+
+model Lesson {
+  id             String   @id @default(uuid())
+  scheduleSlotId String
+  date           DateTime
+
+  topic       String?
+  description String?
+  homework    String?
+  classroomId String?
+
+  scheduleSlot ScheduleSlot @relation(fields: [scheduleSlotId], references: [id], onDelete: Cascade)
+  classroom    Classroom?   @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+
+  grades     Grade[]
+  attendance Attendance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([scheduleSlotId, date])
+  @@index([date])
+  @@index([classroomId])
+}
+
+// =====================
+// GRADES AND ATTENDANCE
+// =====================
+
+model Grade {
+  id        String    @id @default(uuid())
+  studentId String
+  lessonId  String
+
+  value   Int
+  type    GradeType @default(CURRENT)
+  comment String?
+
+  createdBy String
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  creator Teacher @relation("GradeCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([lessonId])
+  @@index([createdBy])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Attendance {
+  id        String @id @default(uuid())
+  studentId String
+  lessonId  String
+
+  status  AttendanceStatus
+  comment String?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Один статус посещаемости на одного ученика в рамках одного урока
+  @@unique([studentId, lessonId])
+
+  @@index([studentId])
+  @@index([lessonId])
+  @@index([status])
+}
+
+// =====================
+// NOTIFICATIONS
+// =====================
+
+model Notification {
+  id     String @id @default(uuid())
+  userId String
+
+  type    NotificationType
+  payload Json
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, readAt])
+  @@index([createdAt])
+}
