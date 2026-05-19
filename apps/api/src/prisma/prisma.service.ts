@@ -1,10 +1,8 @@
 // src/prisma/prisma.service.ts
+import '@/env';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
-import { config } from 'dotenv';
-
-config({ path: '../../.env' });
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {

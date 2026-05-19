@@ -45,4 +45,5 @@ export class AuthController {
       accessToken,
     };
   }
+  // TODO: ограничить доступ к /login только с frontend server
 }

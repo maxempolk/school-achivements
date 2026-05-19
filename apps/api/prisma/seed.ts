@@ -3,7 +3,7 @@ import { PrismaClient, Role } from '@prisma/client';
 import { config } from 'dotenv';
 import * as bcrypt from 'bcrypt';
 
-config({ path: '../../.env' });
+config({ path: '.env' });
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,

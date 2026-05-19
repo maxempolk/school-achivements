@@ -1,3 +1,4 @@
+import { getRequiredEnv } from '@/env';
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '@/users/users.module';
@@ -11,7 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UsersModule,
     PassportModule,
     JwtModule.register({
-      secret: 'dev-secret',
+      secret: getRequiredEnv('JWT_SECRET'),
       signOptions: { expiresIn: '1d' },
     }),
   ],

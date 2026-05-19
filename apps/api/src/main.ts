@@ -1,3 +1,5 @@
+import './env';
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -48,8 +50,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, cleanupOpenApiDoc(document));
-
+  SwaggerModule.setup('api/docs', app, cleanupOpenApiDoc(document), {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  });
   // TODO: make CORS more strict in prod
   CorsSetup(app);
 

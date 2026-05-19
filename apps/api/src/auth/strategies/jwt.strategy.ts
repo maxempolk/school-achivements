@@ -1,3 +1,4 @@
+import { getRequiredEnv } from '@/env';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Role } from '@prisma/client';
@@ -17,13 +18,18 @@ const cookieExtractor = (req: Request): string | null => {
   return typeof accessToken === 'string' ? accessToken : null;
 };
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        cookieExtractor,
+        ...(isProduction ? [] : [ExtractJwt.fromAuthHeaderAsBearerToken()]),
+      ]),
       ignoreExpiration: false,
-      secretOrKey: 'dev-secret',
+      secretOrKey: getRequiredEnv('JWT_SECRET'),
     });
   }
 
