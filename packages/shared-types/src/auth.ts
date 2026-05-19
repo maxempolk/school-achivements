@@ -7,7 +7,7 @@ export const loginSchema = z.object({
   }),
 
   password: z.string().min(6).meta({
-    example: 'password_test',
+    example: 'admin123',
     description: 'Password',
   }),
 });

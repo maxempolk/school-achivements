@@ -10,8 +10,44 @@ const adapter = new PrismaPg({
 });
 const prisma = new PrismaClient({ adapter });
 
+const defaultPassword = 'admin123';
+
+async function upsertClass(name: string) {
+  const existingClass = await prisma.class.findFirst({
+    where: { name },
+  });
+
+  if (existingClass) {
+    return prisma.class.update({
+      where: { id: existingClass.id },
+      data: { name },
+    });
+  }
+
+  return prisma.class.create({
+    data: { name },
+  });
+}
+
+async function upsertSubject(name: string, shortName: string) {
+  const existingSubject = await prisma.subject.findFirst({
+    where: { name },
+  });
+
+  if (existingSubject) {
+    return prisma.subject.update({
+      where: { id: existingSubject.id },
+      data: { name, shortName },
+    });
+  }
+
+  return prisma.subject.create({
+    data: { name, shortName },
+  });
+}
+
 async function main() {
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
   await prisma.user.upsert({
     where: {
@@ -25,7 +61,121 @@ async function main() {
     },
   });
 
-  console.log('Admin user created');
+  const classEntity = await upsertClass('10-A');
+
+  await Promise.all([
+    upsertSubject('Mathematics', 'Math'),
+    upsertSubject('Ukrainian Language', 'Ukr'),
+    upsertSubject('History', 'Hist'),
+  ]);
+
+  const teachers = [
+    {
+      email: 'teacher1@test.com',
+      firstName: 'Olena',
+      lastName: 'Shevchenko',
+    },
+    {
+      email: 'teacher2@test.com',
+      firstName: 'Andrii',
+      lastName: 'Kovalenko',
+    },
+  ];
+
+  for (const teacher of teachers) {
+    const user = await prisma.user.upsert({
+      where: {
+        email: teacher.email,
+      },
+      update: {
+        role: Role.TEACHER,
+      },
+      create: {
+        email: teacher.email,
+        password: passwordHash,
+        role: Role.TEACHER,
+      },
+    });
+
+    await prisma.teacher.upsert({
+      where: {
+        userId: user.id,
+      },
+      update: {
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+      },
+      create: {
+        userId: user.id,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+      },
+    });
+  }
+
+  const students = [
+    {
+      email: 'student1@test.com',
+      firstName: 'Maksym',
+      lastName: 'Bondarenko',
+    },
+    {
+      email: 'student2@test.com',
+      firstName: 'Sofia',
+      lastName: 'Melnyk',
+    },
+    {
+      email: 'student3@test.com',
+      firstName: 'Danylo',
+      lastName: 'Tkachenko',
+    },
+    {
+      email: 'student4@test.com',
+      firstName: 'Anastasiia',
+      lastName: 'Kravchenko',
+    },
+    {
+      email: 'student5@test.com',
+      firstName: 'Artem',
+      lastName: 'Lysenko',
+    },
+  ];
+
+  for (const student of students) {
+    const user = await prisma.user.upsert({
+      where: {
+        email: student.email,
+      },
+      update: {
+        role: Role.STUDENT,
+      },
+      create: {
+        email: student.email,
+        password: passwordHash,
+        role: Role.STUDENT,
+      },
+    });
+
+    await prisma.student.upsert({
+      where: {
+        userId: user.id,
+      },
+      update: {
+        classId: classEntity.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+      },
+      create: {
+        userId: user.id,
+        classId: classEntity.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+      },
+    });
+  }
+
+  console.log('Seed completed');
+  console.log(`Default password for seeded users: ${defaultPassword}`);
 }
 
 main()
