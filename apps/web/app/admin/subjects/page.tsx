@@ -6,6 +6,8 @@ import {
   AdminPagination,
   useAdminPagination,
 } from '@/components/admin/admin-pagination';
+import { AdminDeleteButton } from '@/components/admin/features/components/admin-delete-button';
+import { SubjectFormDialog } from '@/components/admin/features/components/subject-form-dialog';
 import {
   Card,
   CardContent,
@@ -14,6 +16,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { innerApi } from '@/lib/api';
+
+const subjectsQueryKey = ['admin', 'subjects'] as const;
 
 type Subject = {
   id: number;
@@ -33,7 +37,7 @@ export default function AdminSubjectsPage() {
     isError,
     isLoading,
   } = useQuery({
-    queryKey: ['admin', 'subjects'],
+    queryKey: subjectsQueryKey,
     queryFn: getSubjects,
   });
 
@@ -44,11 +48,14 @@ export default function AdminSubjectsPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Subjects</h2>
-        <p className="text-sm text-muted-foreground">
-          Review subjects used across school lessons.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Subjects</h2>
+          <p className="text-sm text-muted-foreground">
+            Review subjects used across school lessons.
+          </p>
+        </div>
+        <SubjectFormDialog mode="create" queryKey={subjectsQueryKey} />
       </div>
 
       <Card>
@@ -67,26 +74,27 @@ export default function AdminSubjectsPage() {
                   <th className="px-4 py-3 font-medium">ID</th>
                   <th className="min-w-64 px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Short name</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
                       Loading subjects...
                     </td>
                   </tr>
                 ) : null}
                 {isError ? (
                   <tr>
-                    <td className="px-4 py-8 text-destructive" colSpan={3}>
+                    <td className="px-4 py-8 text-destructive" colSpan={4}>
                       Failed to load subjects.
                     </td>
                   </tr>
                 ) : null}
                 {!isLoading && !isError && pagination.totalItems === 0 ? (
                   <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
                       No subjects found.
                     </td>
                   </tr>
@@ -99,6 +107,20 @@ export default function AdminSubjectsPage() {
                     <td className="px-4 py-3 font-medium">{subject.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {subject.shortName ?? 'Not set'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <SubjectFormDialog
+                          mode="edit"
+                          queryKey={subjectsQueryKey}
+                          subject={subject}
+                        />
+                        <AdminDeleteButton
+                          endpoint={`/api/backend/subjects/${subject.id}`}
+                          entityName="Subject"
+                          queryKey={subjectsQueryKey}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

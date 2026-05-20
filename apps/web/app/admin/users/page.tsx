@@ -6,6 +6,8 @@ import {
   AdminPagination,
   useAdminPagination,
 } from '@/components/admin/admin-pagination';
+import { AdminDeleteButton } from '@/components/admin/features/components/admin-delete-button';
+import { UserFormDialog } from '@/components/admin/features/components/user-form-dialog';
 import {
   Card,
   CardContent,
@@ -14,6 +16,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { innerApi } from '@/lib/api';
+
+const usersQueryKey = ['admin', 'users'] as const;
 
 type AdminUser = {
   id: number;
@@ -33,7 +37,7 @@ export default function AdminUsersPage() {
     isError,
     isLoading,
   } = useQuery({
-    queryKey: ['admin', 'users'],
+    queryKey: usersQueryKey,
     queryFn: getUsers,
   });
 
@@ -44,11 +48,14 @@ export default function AdminUsersPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Users</h2>
-        <p className="text-sm text-muted-foreground">
-          Manage school accounts and access roles.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Users</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage school accounts and access roles.
+          </p>
+        </div>
+        <UserFormDialog mode="create" queryKey={usersQueryKey} />
       </div>
 
       <Card>
@@ -67,26 +74,27 @@ export default function AdminUsersPage() {
                   <th className="px-4 py-3 font-medium">ID</th>
                   <th className="min-w-64 px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Role</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
                       Loading users...
                     </td>
                   </tr>
                 ) : null}
                 {isError ? (
                   <tr>
-                    <td className="px-4 py-8 text-destructive" colSpan={3}>
+                    <td className="px-4 py-8 text-destructive" colSpan={4}>
                       Failed to load users.
                     </td>
                   </tr>
                 ) : null}
                 {!isLoading && !isError && pagination.totalItems === 0 ? (
                   <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
                       No users found.
                     </td>
                   </tr>
@@ -99,6 +107,20 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 font-medium">{user.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {user.role}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <UserFormDialog
+                          mode="edit"
+                          queryKey={usersQueryKey}
+                          user={user}
+                        />
+                        <AdminDeleteButton
+                          endpoint={`/api/backend/users/${user.id}`}
+                          entityName="User"
+                          queryKey={usersQueryKey}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

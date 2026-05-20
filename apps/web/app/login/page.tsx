@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { LockKeyhole, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +27,7 @@ function getSafeRedirectPath(redirect: string | null) {
   return redirect;
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const {
     register,
     handleSubmit,
@@ -135,5 +136,13 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
