@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Bell, LogOut, Menu, Settings, UserRound, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,6 +21,16 @@ const adminName = 'Admin';
 
 export function AdminHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+    });
+
+    router.replace('/login');
+    router.refresh();
+  }
 
   return (
     <>
@@ -76,7 +87,7 @@ export function AdminHeader() {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive">
+              <DropdownMenuItem variant="destructive" onClick={handleLogout}>
                 <LogOut data-icon="inline-start" />
                 Sign out
               </DropdownMenuItem>

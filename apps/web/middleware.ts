@@ -1,16 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  const accessToken = request.cookies.get('access_token')?.value;
+export function middleware(req: NextRequest) {
+  const accessToken = req.cookies.get('access_token')?.value;
 
   if (!accessToken) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    // return NextResponse.redirect(new URL('/login', request.url));
+    const loginUrl = new URL('/login', req.url);
+
+    loginUrl.searchParams.set('redirect', req.nextUrl.pathname);
+
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*'],
 };
 // TODO: доделать

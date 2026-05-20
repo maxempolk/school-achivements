@@ -16,7 +16,15 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { useForm } from 'react-hook-form';
 import { loginSchema, type LoginInput } from '@school/shared-types';
 import { innerApi } from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+function getSafeRedirectPath(redirect: string | null) {
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
+    return '/dashboard';
+  }
+
+  return redirect;
+}
 
 export default function LoginPage() {
   const {
@@ -32,11 +40,12 @@ export default function LoginPage() {
     },
   });
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   async function onSubmit(values: LoginInput) {
     try {
       await innerApi.post('/api/auth/login', values);
-      router.replace('/dashboard');
+      router.replace(getSafeRedirectPath(searchParams.get('redirect')));
       router.refresh();
     } catch {
       setError('root', {
