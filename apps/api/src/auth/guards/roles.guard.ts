@@ -7,7 +7,7 @@ import type { Request } from 'express';
 
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
-type AuthenticatedRequest = Request & {
+export type AuthenticatedRequest = Request & {
   user: {
     id: number;
     email: string;

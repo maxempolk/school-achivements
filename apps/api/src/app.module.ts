@@ -6,6 +6,9 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ClassesModule } from './classes/classes.module';
 import { SubjectsModule } from './subjects/subjects.module';
+import { LessonsModule } from './lessons/lessons.module';
+import { GradesModule } from './grades/grades.module';
+import { StudentsModule } from './students/students.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { SubjectsModule } from './subjects/subjects.module';
     AuthModule,
     ClassesModule,
     SubjectsModule,
+    LessonsModule,
+    GradesModule,
+    StudentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

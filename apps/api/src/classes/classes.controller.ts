@@ -21,32 +21,36 @@ import { UpdateClassDto } from './dto/update-class.dto';
 
 @Controller('classes')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
 @ApiBearerAuth()
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
   @Get()
+  @Roles(Role.ADMIN, Role.TEACHER)
   findAll() {
     return this.classesService.findAll();
   }
 
   @Get(':id')
+  @Roles(Role.ADMIN, Role.TEACHER)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.classesService.findOne(id);
   }
 
   @Post()
+  @Roles(Role.ADMIN)
   create(@Body() dto: CreateClassDto) {
     return this.classesService.create(dto);
   }
 
   @Patch(':id')
+  @Roles(Role.ADMIN)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClassDto) {
     return this.classesService.update(id, dto);
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.classesService.remove(id);
   }
