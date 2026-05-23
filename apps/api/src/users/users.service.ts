@@ -1,9 +1,16 @@
 import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+
+type UserProfileCreator = (
+  tx: Prisma.TransactionClient,
+  user: { id: number; email: string },
+  dto: CreateUserDto,
+) => Promise<void>;
 
 @Injectable()
 export class UsersService {
@@ -52,13 +59,19 @@ export class UsersService {
   async create(dto: CreateUserDto) {
     const password = await bcrypt.hash(dto.password, 10);
 
-    return this.prisma.user.create({
-      data: {
-        email: dto.email,
-        password,
-        role: dto.role,
-      },
-      select: this.publicUserSelect,
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: dto.email,
+          password,
+          role: dto.role,
+        },
+        select: this.publicUserSelect,
+      });
+
+      await this.createProfileForRole(tx, user, dto);
+
+      return user;
     });
   }
 
@@ -87,5 +100,89 @@ export class UsersService {
       where: { id },
       select: this.publicUserSelect,
     });
+  }
+
+  private async createProfileForRole(
+    tx: Prisma.TransactionClient,
+    user: { id: number; email: string; role: Role },
+    dto: CreateUserDto,
+  ) {
+    const creator = this.profileCreators[user.role];
+
+    if (!creator) {
+      return;
+    }
+
+    await creator(tx, user, dto);
+  }
+
+  private readonly profileCreators: Partial<Record<Role, UserProfileCreator>> =
+    {
+      [Role.TEACHER]: async (tx, user, dto) => {
+        const { firstName, lastName } = this.resolveProfileName(
+          dto,
+          user.email,
+        );
+
+        await tx.teacher.create({
+          data: {
+            userId: user.id,
+            firstName,
+            lastName,
+          },
+        });
+      },
+      [Role.STUDENT]: async (tx, user, dto) => {
+        const { firstName, lastName } = this.resolveProfileName(
+          dto,
+          user.email,
+        );
+        const classId =
+          dto.profile?.classId ?? (await this.resolveDefaultClassId(tx));
+
+        await tx.student.create({
+          data: {
+            userId: user.id,
+            classId,
+            firstName,
+            lastName,
+          },
+        });
+      },
+    };
+
+  private resolveProfileName(dto: CreateUserDto, email: string) {
+    const fallbackName = email.split('@')[0] || 'User';
+
+    return {
+      firstName: dto.profile?.firstName ?? fallbackName,
+      lastName: dto.profile?.lastName ?? 'Profile',
+    };
+  }
+
+  private async resolveDefaultClassId(tx: Prisma.TransactionClient) {
+    const existingClass = await tx.class.findFirst({
+      orderBy: {
+        id: 'asc',
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingClass) {
+      return existingClass.id;
+    }
+
+    const fallbackClass = await tx.class.create({
+      data: {
+        name: 'Unassigned',
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return fallbackClass.id;
   }
 }
