@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { UserProfileFields } from '@/components/admin/features/components/user-profile-fields';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -64,6 +65,11 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
       email: user?.email ?? '',
       password: undefined,
       role: user?.role ?? 'ADMIN',
+      profile: {
+        firstName: '',
+        lastName: '',
+        classId: undefined,
+      },
     },
   });
 
@@ -76,6 +82,11 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
       email: user?.email ?? '',
       password: undefined,
       role: user?.role ?? 'ADMIN',
+      profile: {
+        firstName: '',
+        lastName: '',
+        classId: undefined,
+      },
     });
   }, [form, open, user]);
 
@@ -99,6 +110,10 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
   });
 
   function onSubmit(values: UserFormValues) {
+    if (values.role === 'ADMIN') {
+      values.profile = undefined;
+    }
+
     mutation.mutate(values);
   }
 
@@ -194,6 +209,10 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
               </p>
             ) : null}
           </div>
+
+          {!isEdit ? (
+            <UserProfileFields form={form} disabled={mutation.isPending} />
+          ) : null}
 
           <DialogFooter>
             <Button
