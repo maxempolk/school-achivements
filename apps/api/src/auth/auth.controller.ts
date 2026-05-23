@@ -35,7 +35,7 @@ export class AuthController {
   })
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    const { accessToken } = await this.authService.login(
+    const { accessToken, refreshToken } = await this.authService.login(
       dto.email,
       dto.password,
     );
@@ -43,7 +43,23 @@ export class AuthController {
     return {
       success: true,
       accessToken,
+      refreshToken,
     };
+  }
+
+  @Post('refresh')
+  async refresh(@Body('refreshToken') refreshToken?: string) {
+    const tokens = await this.authService.refresh(refreshToken);
+
+    return {
+      success: true,
+      ...tokens,
+    };
+  }
+
+  @Post('logout')
+  logout(@Body('refreshToken') refreshToken?: string) {
+    return this.authService.logout(refreshToken);
   }
 
   // TODO: ограничить доступ к /login только с frontend server(помоему не обязателньо)

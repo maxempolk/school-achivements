@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { setAuthCookies } from '@/app/api/auth/cookies';
+
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
 
 export async function POST(request: Request) {
@@ -33,13 +35,7 @@ export async function POST(request: Request) {
     ok: true,
   });
 
-  response.cookies.set('access_token', data.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60,
-  });
+  setAuthCookies(response, data);
 
   return response;
 }

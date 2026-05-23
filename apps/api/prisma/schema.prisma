@@ -2,10 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "./ERD.svg"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "./ERD.svg"
+// }
 
 datasource db {
   provider = "postgresql"
@@ -26,6 +26,21 @@ model User {
   role     Role @default(ADMIN)
   teacher   Teacher?
   student   Student?
+  refreshTokenSessions RefreshTokenSession[]
+}
+
+model RefreshTokenSession {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Teacher {
