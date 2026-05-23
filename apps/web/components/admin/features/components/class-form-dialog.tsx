@@ -85,7 +85,11 @@ export function ClassFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant={isEdit ? 'ghost' : 'default'}>
+        <Button
+          data-testid={isEdit ? 'edit-class-button' : 'create-class-button'}
+          size="sm"
+          variant={isEdit ? 'ghost' : 'default'}
+        >
           {isEdit ? 'Edit' : 'Add'}
         </Button>
       </DialogTrigger>
@@ -108,6 +112,7 @@ export function ClassFormDialog({
             <Input
               id={`class-name-${schoolClass?.id ?? 'new'}`}
               aria-invalid={Boolean(form.formState.errors.name)}
+              data-testid="class-name-input"
               {...form.register('name')}
             />
             {form.formState.errors.name ? (
@@ -125,7 +130,11 @@ export function ClassFormDialog({
             >
               Cancel
             </Button>
-            <Button disabled={mutation.isPending} type="submit">
+            <Button
+              data-testid="save-class-button"
+              disabled={mutation.isPending}
+              type="submit"
+            >
               {mutation.isPending ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>

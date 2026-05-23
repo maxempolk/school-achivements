@@ -119,6 +119,7 @@ function GradeInput({
     <div className="flex justify-end gap-2">
       <Input
         className="w-24"
+        data-testid={`grade-input-${student.id}`}
         inputMode="numeric"
         max={12}
         min={1}
@@ -126,7 +127,12 @@ function GradeInput({
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
-      <Button disabled={mutation.isPending} size="sm" onClick={handleSave}>
+      <Button
+        data-testid={`save-grade-${student.id}`}
+        disabled={mutation.isPending}
+        size="sm"
+        onClick={handleSave}
+      >
         {mutation.isPending ? 'Saving...' : 'Save'}
       </Button>
     </div>

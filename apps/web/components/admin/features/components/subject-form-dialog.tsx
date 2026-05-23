@@ -92,7 +92,11 @@ export function SubjectFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant={isEdit ? 'ghost' : 'default'}>
+        <Button
+          data-testid={isEdit ? 'edit-subject-button' : 'create-subject-button'}
+          size="sm"
+          variant={isEdit ? 'ghost' : 'default'}
+        >
           {isEdit ? 'Edit' : 'Add'}
         </Button>
       </DialogTrigger>
@@ -113,6 +117,7 @@ export function SubjectFormDialog({
             <Input
               id={`subject-name-${subject?.id ?? 'new'}`}
               aria-invalid={Boolean(form.formState.errors.name)}
+              data-testid="subject-name-input"
               {...form.register('name')}
             />
             {form.formState.errors.name ? (
@@ -129,6 +134,7 @@ export function SubjectFormDialog({
             <Input
               id={`subject-short-name-${subject?.id ?? 'new'}`}
               aria-invalid={Boolean(form.formState.errors.shortName)}
+              data-testid="subject-short-name-input"
               {...form.register('shortName', {
                 setValueAs: (value) =>
                   typeof value === 'string' && value.trim() === ''
@@ -151,7 +157,11 @@ export function SubjectFormDialog({
             >
               Cancel
             </Button>
-            <Button disabled={mutation.isPending} type="submit">
+            <Button
+              data-testid="save-subject-button"
+              disabled={mutation.isPending}
+              type="submit"
+            >
               {mutation.isPending ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>

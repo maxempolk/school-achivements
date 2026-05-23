@@ -120,7 +120,11 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant={isEdit ? 'ghost' : 'default'}>
+        <Button
+          data-testid={isEdit ? 'edit-user-button' : 'create-user-button'}
+          size="sm"
+          variant={isEdit ? 'ghost' : 'default'}
+        >
           {isEdit ? 'Edit' : 'Create'}
         </Button>
       </DialogTrigger>
@@ -145,6 +149,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
               type="email"
               autoComplete="email"
               aria-invalid={Boolean(form.formState.errors.email)}
+              data-testid="user-email-input"
               {...form.register('email')}
             />
             {form.formState.errors.email ? (
@@ -163,6 +168,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
               type="password"
               autoComplete={isEdit ? 'new-password' : 'current-password'}
               aria-invalid={Boolean(form.formState.errors.password)}
+              data-testid="user-password-input"
               placeholder={isEdit ? 'Leave empty to keep current password' : ''}
               {...form.register('password', {
                 setValueAs: (value) =>
@@ -188,6 +194,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
                   <SelectTrigger
                     className="w-full"
                     aria-invalid={Boolean(form.formState.errors.role)}
+                    data-testid="user-role-select"
                   >
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -222,7 +229,11 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
             >
               Cancel
             </Button>
-            <Button disabled={mutation.isPending} type="submit">
+            <Button
+              data-testid="save-user-button"
+              disabled={mutation.isPending}
+              type="submit"
+            >
               {mutation.isPending ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>

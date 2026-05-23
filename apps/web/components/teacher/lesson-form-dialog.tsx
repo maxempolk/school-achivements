@@ -112,7 +112,7 @@ export function LessonFormDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add</Button>
+        <Button data-testid="create-lesson-button">Add</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -138,7 +138,10 @@ export function LessonFormDialog() {
                   value={field.value ? String(field.value) : ''}
                   onValueChange={(value) => field.onChange(Number(value))}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    data-testid="lesson-class-select"
+                  >
                     <SelectValue placeholder="Select class" />
                   </SelectTrigger>
                   <SelectContent>
@@ -173,7 +176,10 @@ export function LessonFormDialog() {
                   value={field.value ? String(field.value) : ''}
                   onValueChange={(value) => field.onChange(Number(value))}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    data-testid="lesson-subject-select"
+                  >
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent>
@@ -199,6 +205,7 @@ export function LessonFormDialog() {
             <Label htmlFor="lesson-date">Date</Label>
             <Input
               id="lesson-date"
+              data-testid="lesson-date-input"
               type="datetime-local"
               {...form.register('date', {
                 setValueAs: (value) =>
@@ -216,7 +223,11 @@ export function LessonFormDialog() {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="lesson-topic">Topic</Label>
-            <Input id="lesson-topic" {...form.register('topic')} />
+            <Input
+              id="lesson-topic"
+              data-testid="lesson-topic-input"
+              {...form.register('topic')}
+            />
             {form.formState.errors.topic ? (
               <p className="text-sm text-destructive">
                 {form.formState.errors.topic.message}
@@ -228,6 +239,7 @@ export function LessonFormDialog() {
             <Label htmlFor="lesson-homework">Homework</Label>
             <Input
               id="lesson-homework"
+              data-testid="lesson-homework-input"
               {...form.register('homework', {
                 setValueAs: (value) =>
                   typeof value === 'string' && value.trim() === ''
@@ -250,7 +262,11 @@ export function LessonFormDialog() {
             >
               Cancel
             </Button>
-            <Button disabled={createMutation.isPending} type="submit">
+            <Button
+              data-testid="save-lesson-button"
+              disabled={createMutation.isPending}
+              type="submit"
+            >
               {createMutation.isPending ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>

@@ -62,6 +62,7 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
           <Label htmlFor="profile-first-name">First name</Label>
           <Input
             id="profile-first-name"
+            data-testid="profile-first-name-input"
             disabled={disabled}
             {...form.register('profile.firstName')}
           />
@@ -71,6 +72,7 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
           <Label htmlFor="profile-last-name">Last name</Label>
           <Input
             id="profile-last-name"
+            data-testid="profile-last-name-input"
             disabled={disabled}
             {...form.register('profile.lastName')}
           />
@@ -89,7 +91,10 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
                 value={field.value ? String(field.value) : ''}
                 onValueChange={(value) => field.onChange(Number(value))}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger
+                  className="w-full"
+                  data-testid="profile-class-select"
+                >
                   <SelectValue
                     placeholder={
                       classesQuery.isLoading
