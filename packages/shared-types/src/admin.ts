@@ -30,9 +30,46 @@ export const createSubjectSchema = z.object({
 
 export const updateSubjectSchema = createSubjectSchema.partial();
 
+export const createClassroomSchema = z.object({
+  number: z.string().trim().min(1),
+  building: z.string().trim().min(1).nullable().optional(),
+  capacity: z.number().int().positive().nullable().optional(),
+});
+
+export const updateClassroomSchema = createClassroomSchema.partial();
+
+export const dayOfWeekSchema = z.enum([
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY',
+]);
+
+export const weekTypeSchema = z.enum(['ODD', 'EVEN', 'EVERY']);
+
+export const createScheduleSlotSchema = z.object({
+  classId: z.number().int().positive(),
+  subjectId: z.number().int().positive(),
+  teacherId: z.number().int().positive(),
+  classroomId: z.number().int().positive(),
+  dayOfWeek: dayOfWeekSchema,
+  startTime: z.string().trim().min(1),
+  endTime: z.string().trim().min(1),
+  weekType: weekTypeSchema,
+});
+
+export const updateScheduleSlotSchema = createScheduleSlotSchema.partial();
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
 export type UpdateClassInput = z.infer<typeof updateClassSchema>;
 export type CreateSubjectInput = z.infer<typeof createSubjectSchema>;
 export type UpdateSubjectInput = z.infer<typeof updateSubjectSchema>;
+export type CreateClassroomInput = z.infer<typeof createClassroomSchema>;
+export type UpdateClassroomInput = z.infer<typeof updateClassroomSchema>;
+export type CreateScheduleSlotInput = z.infer<typeof createScheduleSlotSchema>;
+export type UpdateScheduleSlotInput = z.infer<typeof updateScheduleSlotSchema>;

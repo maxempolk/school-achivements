@@ -18,14 +18,30 @@ enum Role {
   // PARENT
 }
 
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum WeekType {
+  ODD
+  EVEN
+  EVERY
+}
+
 model User {
   id       Int    @id @default(autoincrement())
   email    String @unique
   password String
 
-  role     Role @default(ADMIN)
-  teacher   Teacher?
-  student   Student?
+  role                 Role                  @default(ADMIN)
+  teacher              Teacher?
+  student              Student?
   refreshTokenSessions RefreshTokenSession[]
 }
 
@@ -37,7 +53,7 @@ model RefreshTokenSession {
   revokedAt DateTime?
   createdAt DateTime  @default(now())
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -48,9 +64,10 @@ model Teacher {
   userId    Int    @unique
   firstName String
   lastName  String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lessons   Lesson[]
+  lessons       Lesson[]
+  scheduleSlots ScheduleSlot[]
 }
 
 model Student {
@@ -60,48 +77,95 @@ model Student {
   firstName String
   lastName  String
 
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  class     Class   @relation(fields: [classId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class Class @relation(fields: [classId], references: [id])
 
-  grades    Grade[]
+  grades Grade[]
 }
 
 model Class {
-  id        Int    @id @default(autoincrement())
-  name      String
-  students  Student[]
-  lessons   Lesson[]
+  id            Int            @id @default(autoincrement())
+  name          String
+  students      Student[]
+  lessons       Lesson[]
+  scheduleSlots ScheduleSlot[]
 }
 
 model Subject {
-  id        Int    @id @default(autoincrement())
-  name      String // "Mathematics"
-  shortName String? // "Math"
+  id            Int            @id @default(autoincrement())
+  name          String // "Mathematics"
+  shortName     String? // "Math"
+  lessons       Lesson[]
+  scheduleSlots ScheduleSlot[]
+}
+
+model Classroom {
+  id       Int     @id @default(autoincrement())
+  number   String
+  building String?
+  capacity Int?
+
+  lessons       Lesson[]
+  scheduleSlots ScheduleSlot[]
+
+  @@unique([number, building])
+}
+
+model ScheduleSlot {
+  id          Int       @id @default(autoincrement())
+  classId     Int
+  subjectId   Int
+  teacherId   Int
+  classroomId Int
+  dayOfWeek   DayOfWeek
+  startTime   DateTime
+  endTime     DateTime
+  weekType    WeekType  @default(EVERY)
+
+  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  teacher   Teacher   @relation(fields: [teacherId], references: [id])
+  classroom Classroom @relation(fields: [classroomId], references: [id])
   lessons   Lesson[]
+
+  @@unique([classId, dayOfWeek, startTime, weekType])
+  @@unique([teacherId, dayOfWeek, startTime, weekType])
+  @@unique([classroomId, dayOfWeek, startTime, weekType])
+  @@index([classId, dayOfWeek])
+  @@index([teacherId, dayOfWeek])
+  @@index([classroomId, dayOfWeek])
 }
 
 model Lesson {
-  id          Int      @id @default(autoincrement())
-  teacherId   Int
-  classId     Int
-  subjectId   Int
-  date        DateTime
-  topic       String
-  homework    String?
-  teacher     Teacher @relation(fields: [teacherId], references: [id])
-  class       Class   @relation(fields: [classId], references: [id])
-  subject     Subject @relation(fields: [subjectId], references: [id])
-  grades      Grade[]
+  id             Int           @id @default(autoincrement())
+  teacherId      Int
+  classId        Int
+  subjectId      Int
+  classroomId    Int?
+  scheduleSlotId Int?
+  date           DateTime
+  topic          String
+  homework       String?
+  teacher        Teacher       @relation(fields: [teacherId], references: [id])
+  class          Class         @relation(fields: [classId], references: [id])
+  subject        Subject       @relation(fields: [subjectId], references: [id])
+  classroom      Classroom?    @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  scheduleSlot   ScheduleSlot? @relation(fields: [scheduleSlotId], references: [id], onDelete: SetNull)
+  grades         Grade[]
+
+  @@index([classroomId])
+  @@index([scheduleSlotId])
 }
 
 model Grade {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   lessonId  Int
   studentId Int
   value     Int
   comment   String?
   lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
   @@unique([lessonId, studentId])
 }
 

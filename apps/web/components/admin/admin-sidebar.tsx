@@ -3,6 +3,7 @@
 import {
   BookOpen,
   CalendarDays,
+  DoorOpen,
   GraduationCap,
   LayoutDashboard,
   School,
@@ -44,6 +45,11 @@ const navigationItems = [
     title: 'Subjects',
     href: '/admin/subjects',
     icon: BookOpen,
+  },
+  {
+    title: 'Classrooms',
+    href: '/admin/classrooms',
+    icon: DoorOpen,
   },
   {
     title: 'Schedule',
