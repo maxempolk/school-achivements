@@ -1,6 +1,9 @@
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '@/auth/guards/roles.guard';
+import {
+  type AuthenticatedRequest,
+  RolesGuard,
+} from '@/auth/guards/roles.guard';
 import {
   Body,
   Controller,
@@ -10,6 +13,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -35,6 +39,12 @@ export class ScheduleSlotsController {
   @Roles(Role.ADMIN)
   getOptions() {
     return this.scheduleSlotsService.getOptions();
+  }
+
+  @Get('me')
+  @Roles(Role.TEACHER, Role.STUDENT)
+  findMine(@Req() req: AuthenticatedRequest) {
+    return this.scheduleSlotsService.findMine(req.user);
   }
 
   @Get(':id')

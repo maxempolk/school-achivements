@@ -1,13 +1,21 @@
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 import { CreateScheduleSlotDto } from './dto/create-schedule-slot.dto';
 import { UpdateScheduleSlotDto } from './dto/update-schedule-slot.dto';
+
+// TODO: как будто бы где то было)))
+type AuthenticatedUser = {
+  id: number;
+  email: string;
+  role: Role;
+};
 
 @Injectable()
 export class ScheduleSlotsService {
@@ -38,6 +46,36 @@ export class ScheduleSlotsService {
     }
 
     return scheduleSlot;
+  }
+
+  async findMine(user: AuthenticatedUser) {
+    if (user.role === Role.TEACHER) {
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+
+      if (!teacher) {
+        throw new NotFoundException('Teacher not found');
+      }
+
+      return this.findByWhere({ teacherId: teacher.id });
+    }
+
+    if (user.role === Role.STUDENT) {
+      const student = await this.prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { classId: true },
+      });
+
+      if (!student) {
+        throw new NotFoundException('Student not found');
+      }
+
+      return this.findByWhere({ classId: student.classId });
+    }
+
+    throw new ForbiddenException('Schedule is available only for profiles');
   }
 
   create(dto: CreateScheduleSlotDto) {
@@ -80,6 +118,21 @@ export class ScheduleSlotsService {
       teachers,
       classrooms,
     }));
+  }
+
+  private findByWhere(where: Prisma.ScheduleSlotWhereInput) {
+    return this.prisma.scheduleSlot.findMany({
+      where,
+      include: this.scheduleSlotInclude,
+      orderBy: [
+        {
+          dayOfWeek: 'asc',
+        },
+        {
+          startTime: 'asc',
+        },
+      ],
+    });
   }
 
   private toCreateData(
