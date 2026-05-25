@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 type SchoolClass = {
   id: number;
@@ -104,8 +105,8 @@ export function LessonFormDialog() {
       toast.success('Lesson created');
       setOpen(false);
     },
-    onError: () => {
-      toast.error('Failed to create lesson');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error) ?? 'Failed to create lesson');
     },
   });
 
@@ -139,6 +140,9 @@ export function LessonFormDialog() {
                   onValueChange={(value) => field.onChange(Number(value))}
                 >
                   <SelectTrigger
+                    aria-invalid={Boolean(
+                      form.formState.errors.classId || classesQuery.isError,
+                    )}
                     className="w-full"
                     data-testid="lesson-class-select"
                   >
@@ -164,6 +168,11 @@ export function LessonFormDialog() {
                 {form.formState.errors.classId.message}
               </p>
             ) : null}
+            {classesQuery.isError ? (
+              <p className="text-sm text-destructive">
+                Failed to load classes.
+              </p>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -177,6 +186,9 @@ export function LessonFormDialog() {
                   onValueChange={(value) => field.onChange(Number(value))}
                 >
                   <SelectTrigger
+                    aria-invalid={Boolean(
+                      form.formState.errors.subjectId || subjectsQuery.isError,
+                    )}
                     className="w-full"
                     data-testid="lesson-subject-select"
                   >
@@ -197,6 +209,11 @@ export function LessonFormDialog() {
             {form.formState.errors.subjectId ? (
               <p className="text-sm text-destructive">
                 {form.formState.errors.subjectId.message}
+              </p>
+            ) : null}
+            {subjectsQuery.isError ? (
+              <p className="text-sm text-destructive">
+                Failed to load subjects.
               </p>
             ) : null}
           </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Bell, LogOut, Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { TeacherSidebar } from '@/components/teacher/teacher-sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -21,7 +22,21 @@ export function TeacherHeader() {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    let response: Response;
+
+    try {
+      response = await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      toast.error('Failed to sign out');
+      return;
+    }
+
+    if (!response.ok) {
+      toast.error('Failed to sign out');
+      return;
+    }
+
+    toast.success('Signed out');
     router.replace('/login');
     router.refresh();
   }

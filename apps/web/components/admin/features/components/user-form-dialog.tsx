@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 type AdminUser = {
   id: number;
@@ -104,8 +105,11 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
       toast.success(isEdit ? 'User updated' : 'User created');
       setOpen(false);
     },
-    onError: () => {
-      toast.error(isEdit ? 'Failed to update user' : 'Failed to create user');
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error) ??
+          (isEdit ? 'Failed to update user' : 'Failed to create user'),
+      );
     },
   });
 

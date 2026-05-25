@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 type Subject = {
   id: number;
@@ -82,9 +83,10 @@ export function SubjectFormDialog({
       toast.success(isEdit ? 'Subject updated' : 'Subject created');
       setOpen(false);
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(
-        isEdit ? 'Failed to update subject' : 'Failed to create subject',
+        getApiErrorMessage(error) ??
+          (isEdit ? 'Failed to update subject' : 'Failed to create subject'),
       );
     },
   });

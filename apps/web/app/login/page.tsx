@@ -18,6 +18,8 @@ import { useForm } from 'react-hook-form';
 import { loginSchema, type LoginInput } from '@school/shared-types';
 import { innerApi } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 function getSafeRedirectPath(redirect: string | null) {
   if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
@@ -31,7 +33,6 @@ function LoginForm() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: standardSchemaResolver(loginSchema),
@@ -48,10 +49,8 @@ function LoginForm() {
       await innerApi.post('/api/auth/login', values);
       router.replace(getSafeRedirectPath(searchParams.get('redirect')));
       router.refresh();
-    } catch {
-      setError('root', {
-        message: 'Invalid email or password',
-      });
+    } catch (error) {
+      toast.error(getApiErrorMessage(error) ?? 'Invalid email or password');
     }
   }
 
@@ -116,12 +115,6 @@ function LoginForm() {
                     </p>
                   )}
                 </div>
-
-                {errors.root && (
-                  <p className="text-sm text-destructive">
-                    {errors.root.message}
-                  </p>
-                )}
 
                 <Button
                   type="submit"

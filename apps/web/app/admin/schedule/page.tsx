@@ -93,10 +93,11 @@ export default function AdminSchedulePage() {
     queryFn: getScheduleSlots,
   });
 
-  const { data: options = emptyOptions } = useQuery({
+  const optionsQuery = useQuery({
     queryKey: scheduleSlotOptionsQueryKey,
     queryFn: getScheduleSlotOptions,
   });
+  const options = optionsQuery.data ?? emptyOptions;
 
   const sortedData = [...data].sort((first, second) => {
     const dayDelta = dayOrder(first.dayOfWeek) - dayOrder(second.dayOfWeek);
@@ -130,6 +131,11 @@ export default function AdminSchedulePage() {
           queryKey={scheduleSlotsQueryKey}
         />
       </div>
+      {optionsQuery.isError ? (
+        <p className="text-sm text-destructive">
+          Failed to load schedule form options.
+        </p>
+      ) : null}
 
       <Card>
         <CardHeader>

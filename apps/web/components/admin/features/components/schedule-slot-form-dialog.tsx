@@ -7,8 +7,7 @@ import {
   type CreateScheduleSlotInput,
 } from '@school/shared-types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 export const dayOfWeekOptions = [
   'MONDAY',
@@ -116,25 +116,6 @@ function optionLabel(option: ScheduleSlotOption) {
   return `#${option.id}`;
 }
 
-function getApiErrorMessage(error: unknown) {
-  if (!axios.isAxiosError(error)) {
-    return null;
-  }
-
-  const message = (error.response?.data as { message?: unknown } | undefined)
-    ?.message;
-
-  if (typeof message === 'string') {
-    return message;
-  }
-
-  if (Array.isArray(message)) {
-    return message.filter((item) => typeof item === 'string').join(', ');
-  }
-
-  return null;
-}
-
 export function ScheduleSlotFormDialog({
   mode,
   options,
@@ -164,6 +145,12 @@ export function ScheduleSlotFormDialog({
     resolver: standardSchemaResolver(createScheduleSlotSchema),
     defaultValues,
   });
+  const classId = useWatch({ control: form.control, name: 'classId' });
+  const subjectId = useWatch({ control: form.control, name: 'subjectId' });
+  const teacherId = useWatch({ control: form.control, name: 'teacherId' });
+  const classroomId = useWatch({ control: form.control, name: 'classroomId' });
+  const dayOfWeek = useWatch({ control: form.control, name: 'dayOfWeek' });
+  const weekType = useWatch({ control: form.control, name: 'weekType' });
 
   useEffect(() => {
     if (open) {
@@ -236,7 +223,7 @@ export function ScheduleSlotFormDialog({
             <SelectField
               error={form.formState.errors.classId?.message}
               label="Class"
-              value={String(form.watch('classId') || '')}
+              value={String(classId || '')}
               options={options.classes}
               onValueChange={(value) =>
                 form.setValue('classId', Number(value), {
@@ -247,7 +234,7 @@ export function ScheduleSlotFormDialog({
             <SelectField
               error={form.formState.errors.subjectId?.message}
               label="Subject"
-              value={String(form.watch('subjectId') || '')}
+              value={String(subjectId || '')}
               options={options.subjects}
               onValueChange={(value) =>
                 form.setValue('subjectId', Number(value), {
@@ -258,7 +245,7 @@ export function ScheduleSlotFormDialog({
             <SelectField
               error={form.formState.errors.teacherId?.message}
               label="Teacher"
-              value={String(form.watch('teacherId') || '')}
+              value={String(teacherId || '')}
               options={options.teachers}
               onValueChange={(value) =>
                 form.setValue('teacherId', Number(value), {
@@ -269,7 +256,7 @@ export function ScheduleSlotFormDialog({
             <SelectField
               error={form.formState.errors.classroomId?.message}
               label="Classroom"
-              value={String(form.watch('classroomId') || '')}
+              value={String(classroomId || '')}
               options={options.classrooms}
               onValueChange={(value) =>
                 form.setValue('classroomId', Number(value), {
@@ -282,7 +269,7 @@ export function ScheduleSlotFormDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             <EnumSelectField
               label="Day"
-              value={form.watch('dayOfWeek')}
+              value={dayOfWeek}
               options={dayOfWeekOptions}
               onValueChange={(value) =>
                 form.setValue('dayOfWeek', value as DayOfWeek, {
@@ -292,7 +279,7 @@ export function ScheduleSlotFormDialog({
             />
             <EnumSelectField
               label="Week"
-              value={form.watch('weekType')}
+              value={weekType}
               options={weekTypeOptions}
               onValueChange={(value) =>
                 form.setValue('weekType', value as WeekType, {

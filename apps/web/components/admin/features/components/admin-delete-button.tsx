@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 type AdminDeleteButtonProps = {
   endpoint: string;
@@ -39,8 +40,11 @@ export function AdminDeleteButton({
       await queryClient.invalidateQueries({ queryKey });
       toast.success(`${entityName} deleted`);
     },
-    onError: () => {
-      toast.error(`Failed to delete ${entityName.toLowerCase()}`);
+    onError: (error) => {
+      toast.error(
+        getApiErrorMessage(error) ??
+          `Failed to delete ${entityName.toLowerCase()}`,
+      );
     },
   });
 

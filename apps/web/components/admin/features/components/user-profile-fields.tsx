@@ -37,6 +37,7 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
     control: form.control,
     name: 'role',
   });
+  const profileErrors = form.formState.errors.profile;
 
   const classesQuery = useQuery({
     queryKey: ['admin', 'classes'],
@@ -62,20 +63,32 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
           <Label htmlFor="profile-first-name">First name</Label>
           <Input
             id="profile-first-name"
+            aria-invalid={Boolean(profileErrors?.firstName)}
             data-testid="profile-first-name-input"
             disabled={disabled}
             {...form.register('profile.firstName')}
           />
+          {profileErrors?.firstName ? (
+            <p className="text-sm text-destructive">
+              {profileErrors.firstName.message}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="profile-last-name">Last name</Label>
           <Input
             id="profile-last-name"
+            aria-invalid={Boolean(profileErrors?.lastName)}
             data-testid="profile-last-name-input"
             disabled={disabled}
             {...form.register('profile.lastName')}
           />
+          {profileErrors?.lastName ? (
+            <p className="text-sm text-destructive">
+              {profileErrors.lastName.message}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -92,6 +105,7 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
                 onValueChange={(value) => field.onChange(Number(value))}
               >
                 <SelectTrigger
+                  aria-invalid={Boolean(profileErrors?.classId)}
                   className="w-full"
                   data-testid="profile-class-select"
                 >
@@ -120,6 +134,11 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
           />
           {classesQuery.isError ? (
             <p className="text-sm text-destructive">Failed to load classes.</p>
+          ) : null}
+          {profileErrors?.classId ? (
+            <p className="text-sm text-destructive">
+              {profileErrors.classId.message}
+            </p>
           ) : null}
         </div>
       ) : null}

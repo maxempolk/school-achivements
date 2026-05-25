@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 type LessonDetails = {
   id: number;
@@ -81,6 +82,7 @@ function GradeInput({
   initialValue?: number;
 }) {
   const [value, setValue] = useState(initialValue?.toString() ?? '');
+  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -93,8 +95,8 @@ function GradeInput({
       });
       toast.success('Grade saved');
     },
-    onError: () => {
-      toast.error('Failed to save grade');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error) ?? 'Failed to save grade');
     },
   });
 
@@ -108,33 +110,41 @@ function GradeInput({
     const parsed = createGradeSchema.safeParse(payload);
 
     if (!parsed.success) {
-      toast.error('Grade must be a number from 1 to 12');
+      setError('Grade must be a number from 1 to 12');
       return;
     }
 
+    setError(null);
     mutation.mutate(parsed.data);
   }
 
   return (
-    <div className="flex justify-end gap-2">
-      <Input
-        className="w-24"
-        data-testid={`grade-input-${student.id}`}
-        inputMode="numeric"
-        max={12}
-        min={1}
-        type="number"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-      />
-      <Button
-        data-testid={`save-grade-${student.id}`}
-        disabled={mutation.isPending}
-        size="sm"
-        onClick={handleSave}
-      >
-        {mutation.isPending ? 'Saving...' : 'Save'}
-      </Button>
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex justify-end gap-2">
+        <Input
+          aria-invalid={Boolean(error)}
+          className="w-24"
+          data-testid={`grade-input-${student.id}`}
+          inputMode="numeric"
+          max={12}
+          min={1}
+          type="number"
+          value={value}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setError(null);
+          }}
+        />
+        <Button
+          data-testid={`save-grade-${student.id}`}
+          disabled={mutation.isPending}
+          size="sm"
+          onClick={handleSave}
+        >
+          {mutation.isPending ? 'Saving...' : 'Save'}
+        </Button>
+      </div>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
   );
 }
@@ -183,8 +193,8 @@ export default function TeacherLessonPage() {
       await queryClient.invalidateQueries({ queryKey: ['teacher', 'lessons'] });
       toast.success('Lesson updated');
     },
-    onError: () => {
-      toast.error('Failed to update lesson');
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error) ?? 'Failed to update lesson');
     },
   });
 
@@ -300,7 +310,16 @@ export default function TeacherLessonPage() {
                     </td>
                   </tr>
                 ) : null}
-                {!studentsQuery.isLoading && students.length === 0 ? (
+                {studentsQuery.isError ? (
+                  <tr>
+                    <td className="px-4 py-8 text-destructive" colSpan={2}>
+                      Failed to load students.
+                    </td>
+                  </tr>
+                ) : null}
+                {!studentsQuery.isLoading &&
+                !studentsQuery.isError &&
+                students.length === 0 ? (
                   <tr>
                     <td className="px-4 py-8 text-muted-foreground" colSpan={2}>
                       No students found.

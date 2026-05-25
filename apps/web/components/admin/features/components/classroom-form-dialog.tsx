@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { innerApi } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/api-error';
 
 type Classroom = {
   id: number;
@@ -85,9 +86,12 @@ export function ClassroomFormDialog({
       toast.success(isEdit ? 'Classroom updated' : 'Classroom created');
       setOpen(false);
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(
-        isEdit ? 'Failed to update classroom' : 'Failed to create classroom',
+        getApiErrorMessage(error) ??
+          (isEdit
+            ? 'Failed to update classroom'
+            : 'Failed to create classroom'),
       );
     },
   });
