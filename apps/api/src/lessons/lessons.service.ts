@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
 
-import { CreateLessonDto } from './dto/create-lesson.dto';
+import { AdminCreateLessonDto } from './dto/admin-create-lesson.dto';
+import { CreateLessonFromScheduleSlotDto } from './dto/create-lesson-from-schedule-slot.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 type LessonFilters = {
@@ -27,24 +28,78 @@ type AuthenticatedUser = {
 export class LessonsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: number, dto: CreateLessonDto) {
-    const teacher = await this.prisma.teacher.findUnique({
-      where: { userId },
-      select: { id: true },
+  create(dto: AdminCreateLessonDto) {
+    return this.prisma.lesson.create({
+      data: {
+        teacherId: dto.teacherId,
+        classId: dto.classId,
+        subjectId: dto.subjectId,
+        classroomId: dto.classroomId ?? undefined,
+        scheduleSlotId: dto.scheduleSlotId ?? undefined,
+        date: new Date(dto.date),
+        topic: dto.topic,
+        homework: dto.homework ?? null,
+      },
+      include: this.lessonInclude,
+    });
+  }
+
+  async createFromScheduleSlot(
+    userId: number,
+    dto: CreateLessonFromScheduleSlotDto,
+  ) {
+    const scheduleSlot = await this.prisma.scheduleSlot.findUnique({
+      where: { id: dto.scheduleSlotId },
+      select: {
+        id: true,
+        classId: true,
+        subjectId: true,
+        teacherId: true,
+        classroomId: true,
+        startTime: true,
+        teacher: {
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
-    if (!teacher) {
-      throw new ForbiddenException('Teacher profile is required');
+    if (!scheduleSlot) {
+      throw new NotFoundException('Schedule slot not found');
+    }
+
+    if (scheduleSlot.teacher.userId !== userId) {
+      throw new ForbiddenException(
+        'You can start lessons only from your own schedule',
+      );
+    }
+
+    const lessonDate = this.resolveLessonDate(dto.date, scheduleSlot.startTime);
+    const existingLesson = await this.prisma.lesson.findUnique({
+      where: {
+        scheduleSlotId_date: {
+          scheduleSlotId: scheduleSlot.id,
+          date: lessonDate,
+        },
+      },
+      include: this.lessonInclude,
+    });
+
+    if (existingLesson) {
+      return existingLesson;
     }
 
     return this.prisma.lesson.create({
       data: {
-        teacherId: teacher.id,
-        classId: dto.classId,
-        subjectId: dto.subjectId,
-        date: new Date(dto.date),
-        topic: dto.topic,
-        homework: dto.homework ?? null,
+        teacherId: scheduleSlot.teacherId,
+        classId: scheduleSlot.classId,
+        subjectId: scheduleSlot.subjectId,
+        classroomId: scheduleSlot.classroomId,
+        scheduleSlotId: scheduleSlot.id,
+        date: lessonDate,
+        topic: 'New lesson',
+        homework: null,
       },
       include: this.lessonInclude,
     });
@@ -149,6 +204,23 @@ export class LessonsService {
     }
 
     return parsed;
+  }
+
+  private resolveLessonDate(date: string, slotStartTime: Date) {
+    const lessonDate = new Date(date);
+
+    if (Number.isNaN(lessonDate.getTime())) {
+      throw new BadRequestException('Invalid lesson date');
+    }
+
+    lessonDate.setHours(
+      slotStartTime.getHours(),
+      slotStartTime.getMinutes(),
+      0,
+      0,
+    );
+
+    return lessonDate;
   }
 
   private readonly lessonInclude = {

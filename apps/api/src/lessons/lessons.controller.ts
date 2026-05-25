@@ -20,7 +20,8 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
-import { CreateLessonDto } from './dto/create-lesson.dto';
+import { AdminCreateLessonDto } from './dto/admin-create-lesson.dto';
+import { CreateLessonFromScheduleSlotDto } from './dto/create-lesson-from-schedule-slot.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { LessonsService } from './lessons.service';
 
@@ -31,9 +32,18 @@ export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
 
   @Post()
+  @Roles(Role.ADMIN)
+  create(@Body() dto: AdminCreateLessonDto) {
+    return this.lessonsService.create(dto);
+  }
+
+  @Post('from-schedule-slot')
   @Roles(Role.TEACHER)
-  create(@Req() req: AuthenticatedRequest, @Body() dto: CreateLessonDto) {
-    return this.lessonsService.create(req.user.id, dto);
+  createFromScheduleSlot(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateLessonFromScheduleSlotDto,
+  ) {
+    return this.lessonsService.createFromScheduleSlot(req.user.id, dto);
   }
 
   @Get()

@@ -8,6 +8,17 @@ export const createLessonSchema = z.object({
   homework: z.string().trim().min(1).nullable().optional(),
 });
 
+export const adminCreateLessonSchema = createLessonSchema.extend({
+  teacherId: z.number().int().positive(),
+  classroomId: z.number().int().positive().nullable().optional(),
+  scheduleSlotId: z.number().int().positive().nullable().optional(),
+});
+
+export const createLessonFromScheduleSlotSchema = z.object({
+  scheduleSlotId: z.number().int().positive(),
+  date: z.string().datetime(),
+});
+
 export const updateLessonSchema = createLessonSchema
   .pick({
     topic: true,
@@ -29,6 +40,10 @@ export const upsertAttendanceSchema = z.object({
 });
 
 export type CreateLessonInput = z.infer<typeof createLessonSchema>;
+export type AdminCreateLessonInput = z.infer<typeof adminCreateLessonSchema>;
+export type CreateLessonFromScheduleSlotInput = z.infer<
+  typeof createLessonFromScheduleSlotSchema
+>;
 export type UpdateLessonInput = z.infer<typeof updateLessonSchema>;
 export type CreateGradeInput = z.infer<typeof createGradeSchema>;
 export type UpsertAttendanceInput = z.infer<typeof upsertAttendanceSchema>;

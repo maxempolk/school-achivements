@@ -340,5 +340,11 @@ export class ScheduleSlotsService {
         building: true,
       },
     },
+    lessons: {
+      select: {
+        id: true,
+        date: true,
+      },
+    },
   } satisfies Prisma.ScheduleSlotInclude;
 }

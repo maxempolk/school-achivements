@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 
-import { LessonFormDialog } from '@/components/teacher/lesson-form-dialog';
 import {
   Card,
   CardContent,
@@ -51,10 +50,9 @@ export default function TeacherLessonsPage() {
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">Lessons</h2>
           <p className="text-sm text-muted-foreground">
-            View your lessons and add new lesson entries.
+            View lesson records started from your schedule.
           </p>
         </div>
-        <LessonFormDialog />
       </div>
 
       <Card>

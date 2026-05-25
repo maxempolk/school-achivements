@@ -155,6 +155,7 @@ model Lesson {
   grades         Grade[]
   attendances    Attendance[]
 
+  @@unique([scheduleSlotId, date])
   @@index([classroomId])
   @@index([scheduleSlotId])
 }

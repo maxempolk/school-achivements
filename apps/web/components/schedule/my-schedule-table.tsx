@@ -1,7 +1,11 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Play } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { getApiErrorMessage } from '@/lib/api-error';
 import { innerApi } from '@/lib/api';
 
 const dayOfWeekOptions = [
@@ -49,10 +54,18 @@ type ScheduleSlot = {
     number: string;
     building: string | null;
   };
+  lessons: Array<{
+    id: number;
+    date: string;
+  }>;
 };
 
 type MyScheduleTableProps = {
   audience: 'student' | 'teacher';
+};
+
+type StartedLesson = {
+  id: number;
 };
 
 async function getMySchedule() {
@@ -77,6 +90,31 @@ function formatSlotTime(value: string) {
 
 function dayOrder(day: DayOfWeek) {
   return dayOfWeekOptions.indexOf(day);
+}
+
+function getNextOccurrenceDate(day: DayOfWeek, startTime: string) {
+  const now = new Date();
+  const date = new Date(now);
+  const currentDayIndex = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const targetDayIndex = dayOrder(day);
+  const dayDelta = (targetDayIndex - currentDayIndex + 7) % 7;
+  const slotStartTime = new Date(startTime);
+
+  date.setDate(now.getDate() + dayDelta);
+
+  if (!Number.isNaN(slotStartTime.getTime())) {
+    date.setHours(slotStartTime.getHours(), slotStartTime.getMinutes(), 0, 0);
+  }
+
+  return date.toISOString();
+}
+
+function findLessonForDate(slot: ScheduleSlot, lessonDate: string) {
+  const lessonTimestamp = new Date(lessonDate).getTime();
+
+  return slot.lessons.find(
+    (lesson) => new Date(lesson.date).getTime() === lessonTimestamp,
+  );
 }
 
 function formatClassroom(classroom: ScheduleSlot['classroom']) {
@@ -106,6 +144,7 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
       formatSlotTime(second.startTime),
     );
   });
+  const columnCount = 7;
 
   return (
     <Card>
@@ -130,6 +169,9 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
                 ) : null}
                 <th className="px-4 py-3 font-medium">Room</th>
                 <th className="px-4 py-3 font-medium">Week</th>
+                {audience === 'teacher' ? (
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -137,7 +179,7 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
                 <tr>
                   <td
                     className="px-4 py-8 text-muted-foreground"
-                    colSpan={audience === 'student' ? 7 : 6}
+                    colSpan={columnCount}
                   >
                     Loading schedule...
                   </td>
@@ -147,7 +189,7 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
                 <tr>
                   <td
                     className="px-4 py-8 text-destructive"
-                    colSpan={audience === 'student' ? 7 : 6}
+                    colSpan={columnCount}
                   >
                     Failed to load schedule.
                   </td>
@@ -157,7 +199,7 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
                 <tr>
                   <td
                     className="px-4 py-8 text-muted-foreground"
-                    colSpan={audience === 'student' ? 7 : 6}
+                    colSpan={columnCount}
                   >
                     No schedule slots found.
                   </td>
@@ -187,6 +229,11 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
                   <td className="px-4 py-3 text-muted-foreground">
                     {slot.weekType}
                   </td>
+                  {audience === 'teacher' ? (
+                    <td className="px-4 py-3 text-right">
+                      <StartLessonButton slot={slot} />
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -194,5 +241,55 @@ export function MyScheduleTable({ audience }: MyScheduleTableProps) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function StartLessonButton({ slot }: { slot: ScheduleSlot }) {
+  const router = useRouter();
+  const lessonDate = getNextOccurrenceDate(slot.dayOfWeek, slot.startTime);
+  const existingLesson = findLessonForDate(slot, lessonDate);
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const response = await innerApi.post<StartedLesson>(
+        '/api/backend/lessons/from-schedule-slot',
+        {
+          scheduleSlotId: slot.id,
+          date: lessonDate,
+        },
+      );
+
+      return response.data;
+    },
+    onSuccess: (lesson) => {
+      router.push(`/teacher/lessons/${lesson.id}`);
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error) ?? 'Failed to start lesson');
+    },
+  });
+
+  function handleClick() {
+    if (existingLesson) {
+      router.push(`/teacher/lessons/${existingLesson.id}`);
+      return;
+    }
+
+    mutation.mutate();
+  }
+
+  return (
+    <Button
+      disabled={mutation.isPending}
+      size="sm"
+      variant="outline"
+      onClick={handleClick}
+    >
+      <Play data-icon="inline-start" />
+      {mutation.isPending
+        ? 'Starting...'
+        : existingLesson
+          ? 'Open lesson'
+          : 'Start lesson'}
+    </Button>
   );
 }
