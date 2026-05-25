@@ -185,5 +185,12 @@ export class LessonsService {
         comment: true,
       },
     },
+    attendances: {
+      select: {
+        id: true,
+        studentId: true,
+        isPresent: true,
+      },
+    },
   } satisfies Prisma.LessonInclude;
 }

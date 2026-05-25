@@ -11,6 +11,7 @@ import { GradesModule } from './grades/grades.module';
 import { StudentsModule } from './students/students.module';
 import { ClassroomsModule } from './classrooms/classrooms.module';
 import { ScheduleSlotsModule } from './schedule-slots/schedule-slots.module';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ScheduleSlotsModule } from './schedule-slots/schedule-slots.module';
     StudentsModule,
     ClassroomsModule,
     ScheduleSlotsModule,
+    AttendanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

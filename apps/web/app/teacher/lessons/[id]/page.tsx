@@ -9,6 +9,7 @@ import {
   updateLessonSchema,
   type CreateGradeInput,
   type UpdateLessonInput,
+  type UpsertAttendanceInput,
 } from '@school/shared-types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -46,6 +47,11 @@ type LessonDetails = {
     studentId: number;
     value: number;
     comment: string | null;
+  }>;
+  attendances: Array<{
+    id: number;
+    studentId: number;
+    isPresent: boolean;
   }>;
 };
 
@@ -149,6 +155,56 @@ function GradeInput({
   );
 }
 
+function AttendanceCheckbox({
+  isPresent,
+  lessonId,
+  student,
+}: {
+  isPresent: boolean;
+  lessonId: number;
+  student: Student;
+}) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (payload: UpsertAttendanceInput) => {
+      await innerApi.post('/api/backend/attendance', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['teacher', 'lesson', String(lessonId)],
+      });
+      toast.success('Attendance saved');
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error) ?? 'Failed to save attendance');
+    },
+  });
+  const checked = mutation.isPending
+    ? (mutation.variables?.isPresent ?? isPresent)
+    : isPresent;
+
+  function handleChange(nextChecked: boolean) {
+    mutation.mutate({
+      lessonId,
+      studentId: student.id,
+      isPresent: nextChecked,
+    });
+  }
+
+  return (
+    <input
+      aria-label={`Mark ${student.lastName} ${student.firstName} present`}
+      checked={checked}
+      className="size-4 rounded border-input accent-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      data-testid={`attendance-checkbox-${student.id}`}
+      disabled={mutation.isPending}
+      type="checkbox"
+      onChange={(event) => handleChange(event.target.checked)}
+    />
+  );
+}
+
 export default function TeacherLessonPage() {
   const params = useParams<{ id: string }>();
   const lessonId = params.id;
@@ -207,6 +263,15 @@ export default function TeacherLessonPage() {
 
     return map;
   }, [lessonQuery.data?.grades]);
+  const attendanceByStudentId = useMemo(() => {
+    const map = new Map<number, boolean>();
+
+    for (const attendance of lessonQuery.data?.attendances ?? []) {
+      map.set(attendance.studentId, attendance.isPresent);
+    }
+
+    return map;
+  }, [lessonQuery.data?.attendances]);
 
   if (lessonQuery.isLoading) {
     return (
@@ -291,7 +356,9 @@ export default function TeacherLessonPage() {
       <Card>
         <CardHeader>
           <CardTitle>Class students</CardTitle>
-          <CardDescription>Set grades for this lesson.</CardDescription>
+          <CardDescription>
+            Mark attendance and set grades for this lesson.
+          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -299,20 +366,21 @@ export default function TeacherLessonPage() {
               <thead className="border-y bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">Student</th>
+                  <th className="px-4 py-3 text-center font-medium">Present</th>
                   <th className="px-4 py-3 text-right font-medium">Grade</th>
                 </tr>
               </thead>
               <tbody>
                 {studentsQuery.isLoading ? (
                   <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={2}>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
                       Loading students...
                     </td>
                   </tr>
                 ) : null}
                 {studentsQuery.isError ? (
                   <tr>
-                    <td className="px-4 py-8 text-destructive" colSpan={2}>
+                    <td className="px-4 py-8 text-destructive" colSpan={3}>
                       Failed to load students.
                     </td>
                   </tr>
@@ -321,7 +389,7 @@ export default function TeacherLessonPage() {
                 !studentsQuery.isError &&
                 students.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={2}>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
                       No students found.
                     </td>
                   </tr>
@@ -330,6 +398,15 @@ export default function TeacherLessonPage() {
                   <tr key={student.id} className="border-b last:border-b-0">
                     <td className="px-4 py-3 font-medium">
                       {student.lastName} {student.firstName}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <AttendanceCheckbox
+                        isPresent={
+                          attendanceByStudentId.get(student.id) ?? false
+                        }
+                        lessonId={lesson.id}
+                        student={student}
+                      />
                     </td>
                     <td className="px-4 py-3">
                       <GradeInput

@@ -22,6 +22,13 @@ export const createGradeSchema = z.object({
   comment: z.string().trim().min(1).nullable().optional(),
 });
 
+export const upsertAttendanceSchema = z.object({
+  lessonId: z.number().int().positive(),
+  studentId: z.number().int().positive(),
+  isPresent: z.boolean(),
+});
+
 export type CreateLessonInput = z.infer<typeof createLessonSchema>;
 export type UpdateLessonInput = z.infer<typeof updateLessonSchema>;
 export type CreateGradeInput = z.infer<typeof createGradeSchema>;
+export type UpsertAttendanceInput = z.infer<typeof upsertAttendanceSchema>;

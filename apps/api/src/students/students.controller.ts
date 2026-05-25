@@ -4,6 +4,7 @@ import {
   type AuthenticatedRequest,
   RolesGuard,
 } from '@/auth/guards/roles.guard';
+import { AttendanceService } from '@/attendance/attendance.service';
 import { GradesService } from '@/grades/grades.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
@@ -27,6 +28,7 @@ import type { Request } from 'express';
 export class StudentsController {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly attendanceService: AttendanceService,
     private readonly gradesService: GradesService,
   ) {}
 
@@ -67,6 +69,23 @@ export class StudentsController {
     }
 
     return this.gradesService.findByStudentId(student.id);
+  }
+
+  @Get('me/attendance')
+  @Roles(Role.STUDENT)
+  async findMyAttendance(@Req() req: AuthenticatedRequest) {
+    const student = await this.prisma.student.findUnique({
+      where: { userId: req.user.id },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    return this.attendanceService.findByStudentId(student.id);
   }
 
   @Get(':id/grades')

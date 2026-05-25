@@ -2,7 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, GraduationCap, TableProperties } from 'lucide-react';
+import {
+  CalendarCheck,
+  CalendarDays,
+  GraduationCap,
+  TableProperties,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,6 +22,11 @@ const navItems = [
     title: 'My schedule',
     href: '/student/schedule',
     icon: CalendarDays,
+  },
+  {
+    title: 'Attendance',
+    href: '/student/attendance',
+    icon: CalendarCheck,
   },
 ];
 

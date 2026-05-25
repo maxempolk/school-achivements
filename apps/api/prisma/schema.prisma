@@ -80,7 +80,8 @@ model Student {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   class Class @relation(fields: [classId], references: [id])
 
-  grades Grade[]
+  grades      Grade[]
+  attendances Attendance[]
 }
 
 model Class {
@@ -152,6 +153,7 @@ model Lesson {
   classroom      Classroom?    @relation(fields: [classroomId], references: [id], onDelete: SetNull)
   scheduleSlot   ScheduleSlot? @relation(fields: [scheduleSlotId], references: [id], onDelete: SetNull)
   grades         Grade[]
+  attendances    Attendance[]
 
   @@index([classroomId])
   @@index([scheduleSlotId])
@@ -165,6 +167,20 @@ model Grade {
   comment   String?
   lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, studentId])
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  lessonId  Int
+  studentId Int
+  isPresent Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([lessonId, studentId])
 }

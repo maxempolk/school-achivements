@@ -26,16 +26,17 @@ const navigationItems = [
     href: '/admin/users',
     icon: UsersRound,
   },
-  {
-    title: 'Teachers',
-    href: '/admin/teachers',
-    icon: GraduationCap,
-  },
-  {
-    title: 'Students',
-    href: '/admin/students',
-    icon: UserRound,
-  },
+  // TODO: не надо ли вернуть?
+  // {
+  //   title: 'Teachers',
+  //   href: '/admin/teachers',
+  //   icon: GraduationCap,
+  // },
+  // {
+  //   title: 'Students',
+  //   href: '/admin/students',
+  //   icon: UserRound,
+  // },
   {
     title: 'Classes',
     href: '/admin/classes',
