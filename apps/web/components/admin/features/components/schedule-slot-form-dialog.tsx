@@ -7,6 +7,7 @@ import {
   type CreateScheduleSlotInput,
 } from '@school/shared-types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -115,6 +116,25 @@ function optionLabel(option: ScheduleSlotOption) {
   return `#${option.id}`;
 }
 
+function getApiErrorMessage(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return null;
+  }
+
+  const message = (error.response?.data as { message?: unknown } | undefined)
+    ?.message;
+
+  if (typeof message === 'string') {
+    return message;
+  }
+
+  if (Array.isArray(message)) {
+    return message.filter((item) => typeof item === 'string').join(', ');
+  }
+
+  return null;
+}
+
 export function ScheduleSlotFormDialog({
   mode,
   options,
@@ -168,11 +188,12 @@ export function ScheduleSlotFormDialog({
       toast.success(isEdit ? 'Schedule slot updated' : 'Schedule slot created');
       setOpen(false);
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(
-        isEdit
-          ? 'Failed to update schedule slot'
-          : 'Failed to create schedule slot',
+        getApiErrorMessage(error) ??
+          (isEdit
+            ? 'Failed to update schedule slot'
+            : 'Failed to create schedule slot'),
       );
     },
   });
@@ -203,7 +224,7 @@ export function ScheduleSlotFormDialog({
             {isEdit ? 'Edit schedule slot' : 'Add schedule slot'}
           </DialogTitle>
           <DialogDescription>
-            Configure a weekly timetable cell without conflict checks.
+            Configure a weekly timetable cell.
           </DialogDescription>
         </DialogHeader>
 

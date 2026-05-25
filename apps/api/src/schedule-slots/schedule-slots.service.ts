@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, WeekType } from '@prisma/client';
 
 import { CreateScheduleSlotDto } from './dto/create-schedule-slot.dto';
 import { UpdateScheduleSlotDto } from './dto/update-schedule-slot.dto';
@@ -15,6 +15,17 @@ type AuthenticatedUser = {
   id: number;
   email: string;
   role: Role;
+};
+
+type ScheduleSlotConflictCandidate = {
+  classId: number;
+  subjectId: number;
+  teacherId: number;
+  classroomId: number;
+  dayOfWeek: CreateScheduleSlotDto['dayOfWeek'];
+  startTime: Date;
+  endTime: Date;
+  weekType: CreateScheduleSlotDto['weekType'];
 };
 
 @Injectable()
@@ -78,19 +89,47 @@ export class ScheduleSlotsService {
     throw new ForbiddenException('Schedule is available only for profiles');
   }
 
-  create(dto: CreateScheduleSlotDto) {
+  async create(dto: CreateScheduleSlotDto) {
+    const data = this.toCreateData(dto);
+
+    await this.validateNoConflicts(data);
+
     return this.prisma.scheduleSlot.create({
-      data: this.toCreateData(dto),
+      data,
       include: this.scheduleSlotInclude,
     });
   }
 
   async update(id: number, dto: UpdateScheduleSlotDto) {
-    await this.findOne(id);
+    const scheduleSlot = await this.prisma.scheduleSlot.findUnique({
+      where: { id },
+    });
+
+    if (!scheduleSlot) {
+      throw new NotFoundException('Schedule slot not found');
+    }
+
+    const data = this.toUpdateData(dto);
+    const candidate = {
+      classId: dto.classId ?? scheduleSlot.classId,
+      subjectId: dto.subjectId ?? scheduleSlot.subjectId,
+      teacherId: dto.teacherId ?? scheduleSlot.teacherId,
+      classroomId: dto.classroomId ?? scheduleSlot.classroomId,
+      dayOfWeek: dto.dayOfWeek ?? scheduleSlot.dayOfWeek,
+      startTime: dto.startTime
+        ? this.parseTime(dto.startTime, 'startTime')
+        : scheduleSlot.startTime,
+      endTime: dto.endTime
+        ? this.parseTime(dto.endTime, 'endTime')
+        : scheduleSlot.endTime,
+      weekType: dto.weekType ?? scheduleSlot.weekType,
+    };
+
+    await this.validateNoConflicts(candidate, id);
 
     return this.prisma.scheduleSlot.update({
       where: { id },
-      data: this.toUpdateData(dto),
+      data,
       include: this.scheduleSlotInclude,
     });
   }
@@ -137,7 +176,7 @@ export class ScheduleSlotsService {
 
   private toCreateData(
     dto: CreateScheduleSlotDto,
-  ): Prisma.ScheduleSlotUncheckedCreateInput {
+  ): ScheduleSlotConflictCandidate {
     return {
       classId: dto.classId,
       subjectId: dto.subjectId,
@@ -188,6 +227,89 @@ export class ScheduleSlotsService {
     }
 
     return new Date(1970, 0, 1, hours, minutes);
+  }
+
+  private async validateNoConflicts(
+    candidate: ScheduleSlotConflictCandidate,
+    excludeId?: number,
+  ) {
+    if (candidate.startTime >= candidate.endTime) {
+      throw new BadRequestException('Start time must be before end time');
+    }
+
+    const [teacherConflict, classConflict, classroomConflict] =
+      await Promise.all([
+        this.findConflict(
+          {
+            teacherId: candidate.teacherId,
+          },
+          candidate,
+          excludeId,
+        ),
+        this.findConflict(
+          {
+            classId: candidate.classId,
+          },
+          candidate,
+          excludeId,
+        ),
+        this.findConflict(
+          {
+            classroomId: candidate.classroomId,
+          },
+          candidate,
+          excludeId,
+        ),
+      ]);
+
+    if (teacherConflict) {
+      throw new BadRequestException('Teacher is already busy at this time');
+    }
+
+    if (classConflict) {
+      throw new BadRequestException('Class is already busy at this time');
+    }
+
+    if (classroomConflict) {
+      throw new BadRequestException('Classroom is already busy at this time');
+    }
+  }
+
+  private findConflict(
+    resourceWhere: Pick<
+      Prisma.ScheduleSlotWhereInput,
+      'teacherId' | 'classId' | 'classroomId'
+    >,
+    candidate: ScheduleSlotConflictCandidate,
+    excludeId?: number,
+  ) {
+    return this.prisma.scheduleSlot.findFirst({
+      where: {
+        ...resourceWhere,
+        id: excludeId ? { not: excludeId } : undefined,
+        dayOfWeek: candidate.dayOfWeek,
+        startTime: {
+          lt: candidate.endTime,
+        },
+        endTime: {
+          gt: candidate.startTime,
+        },
+        weekType: this.weekTypeConflictFilter(candidate.weekType),
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  private weekTypeConflictFilter(weekType: CreateScheduleSlotDto['weekType']) {
+    if (weekType === 'EVERY') {
+      return undefined;
+    }
+
+    return {
+      in: [WeekType.EVERY, weekType],
+    };
   }
 
   private readonly scheduleSlotInclude = {
