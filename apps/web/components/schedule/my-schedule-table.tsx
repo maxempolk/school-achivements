@@ -62,16 +62,16 @@ type ScheduleSlot = {
 
 type MyScheduleTableProps = {
   audience: 'student' | 'teacher';
+  endpoint?: string;
+  queryKey?: readonly unknown[];
 };
 
 type StartedLesson = {
   id: number;
 };
 
-async function getMySchedule() {
-  const response = await innerApi.get<ScheduleSlot[]>(
-    '/api/backend/schedule-slots/me',
-  );
+async function getMySchedule(endpoint: string) {
+  const response = await innerApi.get<ScheduleSlot[]>(endpoint);
 
   return response.data;
 }
@@ -123,14 +123,18 @@ function formatClassroom(classroom: ScheduleSlot['classroom']) {
     : classroom.number;
 }
 
-export function MyScheduleTable({ audience }: MyScheduleTableProps) {
+export function MyScheduleTable({
+  audience,
+  endpoint = '/api/backend/schedule-slots/me',
+  queryKey,
+}: MyScheduleTableProps) {
   const {
     data = [],
     isError,
     isLoading,
   } = useQuery({
-    queryKey: [audience, 'schedule'],
-    queryFn: getMySchedule,
+    queryKey: queryKey ?? [audience, 'schedule'],
+    queryFn: () => getMySchedule(endpoint),
   });
 
   const sortedData = [...data].sort((first, second) => {

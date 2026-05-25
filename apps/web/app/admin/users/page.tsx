@@ -7,6 +7,7 @@ import {
   useAdminPagination,
 } from '@/components/admin/admin-pagination';
 import { AdminDeleteButton } from '@/components/admin/features/components/admin-delete-button';
+import { ParentChildrenDialog } from '@/components/admin/features/components/parent-children-dialog';
 import { UserFormDialog } from '@/components/admin/features/components/user-form-dialog';
 import {
   Card,
@@ -22,7 +23,13 @@ const usersQueryKey = ['admin', 'users'] as const;
 type AdminUser = {
   id: number;
   email: string;
-  role: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
+  parent: {
+    id: number;
+    children: Array<{
+      studentId: number;
+    }>;
+  } | null;
 };
 
 async function getUsers() {
@@ -110,6 +117,12 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
+                        {user.role === 'PARENT' ? (
+                          <ParentChildrenDialog
+                            parent={user}
+                            queryKey={usersQueryKey}
+                          />
+                        ) : null}
                         <UserFormDialog
                           mode="edit"
                           queryKey={usersQueryKey}

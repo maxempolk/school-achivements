@@ -114,7 +114,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
   });
 
   function onSubmit(values: UserFormValues) {
-    if (values.role === 'ADMIN') {
+    if (values.role === 'ADMIN' || values.role === 'PARENT') {
       values.profile = undefined;
     }
 

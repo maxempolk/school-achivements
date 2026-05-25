@@ -15,7 +15,7 @@ enum Role {
   ADMIN
   TEACHER
   STUDENT
-  // PARENT
+  PARENT
 }
 
 enum DayOfWeek {
@@ -42,6 +42,7 @@ model User {
   role                 Role                  @default(ADMIN)
   teacher              Teacher?
   student              Student?
+  parent               Parent?
   refreshTokenSessions RefreshTokenSession[]
 }
 
@@ -82,6 +83,28 @@ model Student {
 
   grades      Grade[]
   attendances Attendance[]
+  parents     ParentStudent[]
+}
+
+model Parent {
+  id     Int @id @default(autoincrement())
+  userId Int @unique
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  children ParentStudent[]
+
+  @@index([userId])
+}
+
+model ParentStudent {
+  parentId  Int
+  studentId Int
+
+  parent  Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([parentId, studentId])
+  @@index([studentId])
 }
 
 model Class {

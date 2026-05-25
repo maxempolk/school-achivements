@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 
-export const roleSchema = z.enum(['ADMIN', 'TEACHER', 'STUDENT']);
+export const roleSchema = z.enum(['ADMIN', 'TEACHER', 'STUDENT', 'PARENT']);
 
 export const userProfileSchema = z.object({
   firstName: z.string().trim().min(1).optional(),
@@ -63,6 +63,10 @@ export const createScheduleSlotSchema = z.object({
 
 export const updateScheduleSlotSchema = createScheduleSlotSchema.partial();
 
+export const updateParentStudentsSchema = z.object({
+  studentIds: z.array(z.number().int().positive()),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
@@ -73,3 +77,6 @@ export type CreateClassroomInput = z.infer<typeof createClassroomSchema>;
 export type UpdateClassroomInput = z.infer<typeof updateClassroomSchema>;
 export type CreateScheduleSlotInput = z.infer<typeof createScheduleSlotSchema>;
 export type UpdateScheduleSlotInput = z.infer<typeof updateScheduleSlotSchema>;
+export type UpdateParentStudentsInput = z.infer<
+  typeof updateParentStudentsSchema
+>;

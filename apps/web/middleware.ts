@@ -22,6 +22,7 @@ export const config = {
     '/admin/:path*',
     '/teacher/:path*',
     '/student/:path*',
+    '/parent/:path*',
   ],
 };
 // TODO: доделать

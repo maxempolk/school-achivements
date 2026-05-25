@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Role } from '@prisma/client';
+import type { Student } from '@prisma/client';
 import { config } from 'dotenv';
 import * as bcrypt from 'bcrypt';
 
@@ -140,6 +141,7 @@ async function main() {
       lastName: 'Lysenko',
     },
   ];
+  const seededStudents: Student[] = [];
 
   for (const student of students) {
     const user = await prisma.user.upsert({
@@ -156,7 +158,7 @@ async function main() {
       },
     });
 
-    await prisma.student.upsert({
+    const studentProfile = await prisma.student.upsert({
       where: {
         userId: user.id,
       },
@@ -172,7 +174,46 @@ async function main() {
         lastName: student.lastName,
       },
     });
+
+    seededStudents.push(studentProfile);
   }
+
+  const parentUser = await prisma.user.upsert({
+    where: {
+      email: 'parent1@test.com',
+    },
+    update: {
+      role: Role.PARENT,
+    },
+    create: {
+      email: 'parent1@test.com',
+      password: passwordHash,
+      role: Role.PARENT,
+    },
+  });
+
+  const parent = await prisma.parent.upsert({
+    where: {
+      userId: parentUser.id,
+    },
+    update: {},
+    create: {
+      userId: parentUser.id,
+    },
+  });
+
+  await prisma.parentStudent.deleteMany({
+    where: {
+      parentId: parent.id,
+    },
+  });
+
+  await prisma.parentStudent.createMany({
+    data: seededStudents.slice(0, 2).map((student) => ({
+      parentId: parent.id,
+      studentId: student.id,
+    })),
+  });
 
   console.log('Seed completed');
   console.log(`Default password for seeded users: ${defaultPassword}`);

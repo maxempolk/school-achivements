@@ -20,6 +20,16 @@ export class UsersService {
     id: true,
     email: true,
     role: true,
+    parent: {
+      select: {
+        id: true,
+        children: {
+          select: {
+            studentId: true,
+          },
+        },
+      },
+    },
   };
 
   async findByEmail(email: string) {
@@ -76,20 +86,26 @@ export class UsersService {
   }
 
   async update(id: number, dto: UpdateUserDto) {
-    await this.findOne(id);
-
     const password = dto.password
       ? await bcrypt.hash(dto.password, 10)
       : undefined;
 
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        email: dto.email,
-        password,
-        role: dto.role,
-      },
-      select: this.publicUserSelect,
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id },
+        data: {
+          email: dto.email,
+          password,
+          role: dto.role,
+        },
+        select: this.publicUserSelect,
+      });
+
+      if (dto.role) {
+        await this.ensureProfileForRole(tx, user, dto);
+      }
+
+      return user;
     });
   }
 
@@ -114,6 +130,76 @@ export class UsersService {
     }
 
     await creator(tx, user, dto);
+  }
+
+  private async ensureProfileForRole(
+    tx: Prisma.TransactionClient,
+    user: { id: number; email: string; role: Role },
+    dto: UpdateUserDto,
+  ) {
+    if (user.role === Role.TEACHER) {
+      const existingTeacher = await tx.teacher.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+
+      if (existingTeacher) {
+        return;
+      }
+
+      const { firstName, lastName } = this.resolveProfileName(dto, user.email);
+
+      await tx.teacher.create({
+        data: {
+          userId: user.id,
+          firstName,
+          lastName,
+        },
+      });
+      return;
+    }
+
+    if (user.role === Role.STUDENT) {
+      const existingStudent = await tx.student.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+
+      if (existingStudent) {
+        return;
+      }
+
+      const { firstName, lastName } = this.resolveProfileName(dto, user.email);
+      const classId =
+        dto.profile?.classId ?? (await this.resolveDefaultClassId(tx));
+
+      await tx.student.create({
+        data: {
+          userId: user.id,
+          classId,
+          firstName,
+          lastName,
+        },
+      });
+      return;
+    }
+
+    if (user.role === Role.PARENT) {
+      const existingParent = await tx.parent.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+
+      if (existingParent) {
+        return;
+      }
+
+      await tx.parent.create({
+        data: {
+          userId: user.id,
+        },
+      });
+    }
   }
 
   private readonly profileCreators: Partial<Record<Role, UserProfileCreator>> =
@@ -149,9 +235,19 @@ export class UsersService {
           },
         });
       },
+      [Role.PARENT]: async (tx, user) => {
+        await tx.parent.create({
+          data: {
+            userId: user.id,
+          },
+        });
+      },
     };
 
-  private resolveProfileName(dto: CreateUserDto, email: string) {
+  private resolveProfileName(
+    dto: CreateUserDto | UpdateUserDto,
+    email: string,
+  ) {
     const fallbackName = email.split('@')[0] || 'User';
 
     return {
