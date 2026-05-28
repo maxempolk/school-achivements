@@ -56,6 +56,12 @@ type ScheduleSlotOption = {
   lastName?: string;
   number?: string;
   building?: string | null;
+  classes?: Array<{
+    classId: number;
+  }>;
+  subjects?: Array<{
+    subjectId: number;
+  }>;
 };
 
 export type ScheduleSlotOptions = {
@@ -152,11 +158,59 @@ export function ScheduleSlotFormDialog({
   const dayOfWeek = useWatch({ control: form.control, name: 'dayOfWeek' });
   const weekType = useWatch({ control: form.control, name: 'weekType' });
 
+  const selectedTeacher = options.teachers.find(
+    (teacher) => teacher.id === teacherId,
+  );
+  const assignedClassIds = useMemo(
+    () => selectedTeacher?.classes?.map(({ classId }) => classId) ?? [],
+    [selectedTeacher?.classes],
+  );
+  const assignedSubjectIds = useMemo(
+    () => selectedTeacher?.subjects?.map(({ subjectId }) => subjectId) ?? [],
+    [selectedTeacher?.subjects],
+  );
+  const classOptions = useMemo(
+    () =>
+      options.classes.filter((classOption) =>
+        assignedClassIds.includes(classOption.id),
+      ),
+    [assignedClassIds, options.classes],
+  );
+  const subjectOptions = useMemo(
+    () =>
+      options.subjects.filter((subjectOption) =>
+        assignedSubjectIds.includes(subjectOption.id),
+      ),
+    [assignedSubjectIds, options.subjects],
+  );
+  const teacherHasAssignments =
+    classOptions.length > 0 && subjectOptions.length > 0;
+
   useEffect(() => {
     if (open) {
       form.reset(defaultValues);
     }
   }, [defaultValues, form, open]);
+
+  useEffect(() => {
+    if (!open || !teacherId) {
+      return;
+    }
+
+    const nextClassId = classOptions[0]?.id;
+    const nextSubjectId = subjectOptions[0]?.id;
+
+    if (nextClassId && !classOptions.some((option) => option.id === classId)) {
+      form.setValue('classId', nextClassId, { shouldValidate: true });
+    }
+
+    if (
+      nextSubjectId &&
+      !subjectOptions.some((option) => option.id === subjectId)
+    ) {
+      form.setValue('subjectId', nextSubjectId, { shouldValidate: true });
+    }
+  }, [classId, classOptions, form, open, subjectId, subjectOptions, teacherId]);
 
   const mutation = useMutation({
     mutationFn: async (values: CreateScheduleSlotInput) => {
@@ -222,9 +276,14 @@ export function ScheduleSlotFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectField
               error={form.formState.errors.classId?.message}
+              helperText={
+                teacherId && classOptions.length === 0
+                  ? 'Selected teacher has no assigned classes.'
+                  : undefined
+              }
               label="Class"
               value={String(classId || '')}
-              options={options.classes}
+              options={classOptions}
               onValueChange={(value) =>
                 form.setValue('classId', Number(value), {
                   shouldValidate: true,
@@ -233,9 +292,14 @@ export function ScheduleSlotFormDialog({
             />
             <SelectField
               error={form.formState.errors.subjectId?.message}
+              helperText={
+                teacherId && subjectOptions.length === 0
+                  ? 'Selected teacher has no assigned subjects.'
+                  : undefined
+              }
               label="Subject"
               value={String(subjectId || '')}
-              options={options.subjects}
+              options={subjectOptions}
               onValueChange={(value) =>
                 form.setValue('subjectId', Number(value), {
                   shouldValidate: true,
@@ -336,7 +400,7 @@ export function ScheduleSlotFormDialog({
             </Button>
             <Button
               data-testid="save-schedule-slot-button"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || !teacherHasAssignments}
               type="submit"
             >
               {mutation.isPending ? 'Saving...' : 'Save'}
@@ -350,6 +414,7 @@ export function ScheduleSlotFormDialog({
 
 type SelectFieldProps = {
   error?: string;
+  helperText?: string;
   label: string;
   value: string;
   options: ScheduleSlotOption[];
@@ -358,6 +423,7 @@ type SelectFieldProps = {
 
 function SelectField({
   error,
+  helperText,
   label,
   value,
   options,
@@ -381,6 +447,9 @@ function SelectField({
         </SelectContent>
       </Select>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {!error && helperText ? (
+        <p className="text-sm text-muted-foreground">{helperText}</p>
+      ) : null}
     </div>
   );
 }

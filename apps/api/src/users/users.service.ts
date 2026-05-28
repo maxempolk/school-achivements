@@ -20,6 +20,21 @@ export class UsersService {
     id: true,
     email: true,
     role: true,
+    teacher: {
+      select: {
+        id: true,
+        classes: {
+          select: {
+            classId: true,
+          },
+        },
+        subjects: {
+          select: {
+            subjectId: true,
+          },
+        },
+      },
+    },
     parent: {
       select: {
         id: true,

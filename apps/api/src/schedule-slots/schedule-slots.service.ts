@@ -93,6 +93,7 @@ export class ScheduleSlotsService {
     const data = this.toCreateData(dto);
 
     await this.validateNoConflicts(data);
+    await this.validateTeacherAssignments(data);
 
     return this.prisma.scheduleSlot.create({
       data,
@@ -126,6 +127,7 @@ export class ScheduleSlotsService {
     };
 
     await this.validateNoConflicts(candidate, id);
+    await this.validateTeacherAssignments(candidate);
 
     return this.prisma.scheduleSlot.update({
       where: { id },
@@ -148,6 +150,18 @@ export class ScheduleSlotsService {
       this.prisma.class.findMany({ orderBy: { name: 'asc' } }),
       this.prisma.subject.findMany({ orderBy: { name: 'asc' } }),
       this.prisma.teacher.findMany({
+        include: {
+          classes: {
+            select: {
+              classId: true,
+            },
+          },
+          subjects: {
+            select: {
+              subjectId: true,
+            },
+          },
+        },
         orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
       }),
       this.prisma.classroom.findMany({ orderBy: { id: 'asc' } }),
@@ -272,6 +286,46 @@ export class ScheduleSlotsService {
 
     if (classroomConflict) {
       throw new BadRequestException('Classroom is already busy at this time');
+    }
+  }
+
+  private async validateTeacherAssignments(
+    candidate: Pick<
+      ScheduleSlotConflictCandidate,
+      'teacherId' | 'classId' | 'subjectId'
+    >,
+  ) {
+    const [classAssignment, subjectAssignment] = await Promise.all([
+      this.prisma.teacherClass.findUnique({
+        where: {
+          teacherId_classId: {
+            teacherId: candidate.teacherId,
+            classId: candidate.classId,
+          },
+        },
+        select: {
+          teacherId: true,
+        },
+      }),
+      this.prisma.teacherSubject.findUnique({
+        where: {
+          teacherId_subjectId: {
+            teacherId: candidate.teacherId,
+            subjectId: candidate.subjectId,
+          },
+        },
+        select: {
+          teacherId: true,
+        },
+      }),
+    ]);
+
+    if (!classAssignment) {
+      throw new BadRequestException('Teacher is not assigned to this class');
+    }
+
+    if (!subjectAssignment) {
+      throw new BadRequestException('Teacher is not assigned to this subject');
     }
   }
 

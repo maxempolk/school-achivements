@@ -1,6 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Role } from '@prisma/client';
-import type { Student } from '@prisma/client';
+import type { Student, Teacher } from '@prisma/client';
 import { config } from 'dotenv';
 import * as bcrypt from 'bcrypt';
 
@@ -64,7 +64,7 @@ async function main() {
 
   const classEntity = await upsertClass('10-A');
 
-  await Promise.all([
+  const [mathematics, ukrainianLanguage, history] = await Promise.all([
     upsertSubject('Mathematics', 'Math'),
     upsertSubject('Ukrainian Language', 'Ukr'),
     upsertSubject('History', 'Hist'),
@@ -82,6 +82,7 @@ async function main() {
       lastName: 'Kovalenko',
     },
   ];
+  const seededTeachers: Teacher[] = [];
 
   for (const teacher of teachers) {
     const user = await prisma.user.upsert({
@@ -98,7 +99,7 @@ async function main() {
       },
     });
 
-    await prisma.teacher.upsert({
+    const teacherProfile = await prisma.teacher.upsert({
       where: {
         userId: user.id,
       },
@@ -112,6 +113,58 @@ async function main() {
         lastName: teacher.lastName,
       },
     });
+
+    seededTeachers.push(teacherProfile);
+  }
+
+  for (const teacher of seededTeachers) {
+    await prisma.teacherClass.upsert({
+      where: {
+        teacherId_classId: {
+          teacherId: teacher.id,
+          classId: classEntity.id,
+        },
+      },
+      update: {},
+      create: {
+        teacherId: teacher.id,
+        classId: classEntity.id,
+      },
+    });
+  }
+
+  if (seededTeachers[0]) {
+    await prisma.teacherSubject.upsert({
+      where: {
+        teacherId_subjectId: {
+          teacherId: seededTeachers[0].id,
+          subjectId: mathematics.id,
+        },
+      },
+      update: {},
+      create: {
+        teacherId: seededTeachers[0].id,
+        subjectId: mathematics.id,
+      },
+    });
+  }
+
+  if (seededTeachers[1]) {
+    for (const subject of [ukrainianLanguage, history]) {
+      await prisma.teacherSubject.upsert({
+        where: {
+          teacherId_subjectId: {
+            teacherId: seededTeachers[1].id,
+            subjectId: subject.id,
+          },
+        },
+        update: {},
+        create: {
+          teacherId: seededTeachers[1].id,
+          subjectId: subject.id,
+        },
+      });
+    }
   }
 
   const students = [

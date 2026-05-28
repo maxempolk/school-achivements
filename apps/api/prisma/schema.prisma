@@ -69,6 +69,8 @@ model Teacher {
 
   lessons       Lesson[]
   scheduleSlots ScheduleSlot[]
+  classes       TeacherClass[]
+  subjects      TeacherSubject[]
 }
 
 model Student {
@@ -113,6 +115,7 @@ model Class {
   students      Student[]
   lessons       Lesson[]
   scheduleSlots ScheduleSlot[]
+  teachers      TeacherClass[]
 }
 
 model Subject {
@@ -121,6 +124,29 @@ model Subject {
   shortName     String? // "Math"
   lessons       Lesson[]
   scheduleSlots ScheduleSlot[]
+  teachers      TeacherSubject[]
+}
+
+model TeacherClass {
+  teacherId Int
+  classId   Int
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@id([teacherId, classId])
+  @@index([classId])
+}
+
+model TeacherSubject {
+  teacherId Int
+  subjectId Int
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([teacherId, subjectId])
+  @@index([subjectId])
 }
 
 model Classroom {

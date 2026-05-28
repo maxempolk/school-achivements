@@ -67,6 +67,11 @@ export const updateParentStudentsSchema = z.object({
   studentIds: z.array(z.number().int().positive()),
 });
 
+export const updateTeacherAssignmentsSchema = z.object({
+  classIds: z.array(z.number().int().positive()),
+  subjectIds: z.array(z.number().int().positive()),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type CreateClassInput = z.infer<typeof createClassSchema>;
@@ -79,4 +84,7 @@ export type CreateScheduleSlotInput = z.infer<typeof createScheduleSlotSchema>;
 export type UpdateScheduleSlotInput = z.infer<typeof updateScheduleSlotSchema>;
 export type UpdateParentStudentsInput = z.infer<
   typeof updateParentStudentsSchema
+>;
+export type UpdateTeacherAssignmentsInput = z.infer<
+  typeof updateTeacherAssignmentsSchema
 >;

@@ -8,6 +8,7 @@ import { AttendanceService } from '@/attendance/attendance.service';
 import { GradesService } from '@/grades/grades.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
+  BadRequestException,
   Controller,
   ForbiddenException,
   Get,
@@ -20,7 +21,6 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import type { Request } from 'express';
 
 @Controller('students')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -34,13 +34,35 @@ export class StudentsController {
 
   @Get()
   @Roles(Role.ADMIN, Role.TEACHER)
-  findAll(@Query('classId') classId?: string) {
+  async findAll(
+    @Req() req: AuthenticatedRequest,
+    @Query('classId') classId?: string,
+  ) {
+    const parsedClassId =
+      classId === undefined ? undefined : this.parsePositiveInt(classId);
+    const assignedClassIds =
+      req.user.role === Role.TEACHER
+        ? await this.findTeacherClassIds(req.user.id)
+        : undefined;
     const where =
-      classId === undefined
+      parsedClassId === undefined && assignedClassIds === undefined
         ? undefined
         : {
-            classId: Number(classId),
+            classId:
+              parsedClassId === undefined
+                ? {
+                    in: assignedClassIds,
+                  }
+                : parsedClassId,
           };
+
+    if (
+      req.user.role === Role.TEACHER &&
+      parsedClassId !== undefined &&
+      !assignedClassIds?.includes(parsedClassId)
+    ) {
+      return [];
+    }
 
     return this.prisma.student.findMany({
       where,
@@ -111,5 +133,36 @@ export class StudentsController {
     }
 
     return this.gradesService.findByStudentId(id);
+  }
+
+  //TODO: убрать дубликат parsePositiveInt
+  private parsePositiveInt(value: string) {
+    const parsed = Number(value);
+
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new BadRequestException('classId must be a positive integer');
+    }
+
+    return parsed;
+  }
+
+  // TODO: почему эта функция тут? разве она не должна быть в TEACHER
+  private async findTeacherClassIds(userId: number) {
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { userId },
+      select: {
+        classes: {
+          select: {
+            classId: true,
+          },
+        },
+      },
+    });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    return teacher.classes.map(({ classId }) => classId);
   }
 }

@@ -13,6 +13,7 @@ import { ClassroomsModule } from './classrooms/classrooms.module';
 import { ScheduleSlotsModule } from './schedule-slots/schedule-slots.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { ParentsModule } from './parents/parents.module';
+import { TeachersModule } from './teachers/teachers.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ParentsModule } from './parents/parents.module';
     ScheduleSlotsModule,
     AttendanceModule,
     ParentsModule,
+    TeachersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

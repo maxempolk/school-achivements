@@ -1,6 +1,9 @@
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '@/auth/guards/roles.guard';
+import {
+  type AuthenticatedRequest,
+  RolesGuard,
+} from '@/auth/guards/roles.guard';
 import {
   Body,
   Controller,
@@ -10,6 +13,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -27,14 +31,17 @@ export class ClassesController {
 
   @Get()
   @Roles(Role.ADMIN, Role.TEACHER)
-  findAll() {
-    return this.classesService.findAll();
+  findAll(@Req() req: AuthenticatedRequest) {
+    return this.classesService.findAll(req.user);
   }
 
   @Get(':id')
   @Roles(Role.ADMIN, Role.TEACHER)
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.classesService.findOne(id);
+  findOne(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.classesService.findOne(req.user, id);
   }
 
   @Post()

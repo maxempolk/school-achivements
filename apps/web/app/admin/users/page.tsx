@@ -8,6 +8,7 @@ import {
 } from '@/components/admin/admin-pagination';
 import { AdminDeleteButton } from '@/components/admin/features/components/admin-delete-button';
 import { ParentChildrenDialog } from '@/components/admin/features/components/parent-children-dialog';
+import { TeacherAssignmentsDialog } from '@/components/admin/features/components/teacher-assignments-dialog';
 import { UserFormDialog } from '@/components/admin/features/components/user-form-dialog';
 import {
   Card,
@@ -24,6 +25,15 @@ type AdminUser = {
   id: number;
   email: string;
   role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
+  teacher: {
+    id: number;
+    classes: Array<{
+      classId: number;
+    }>;
+    subjects: Array<{
+      subjectId: number;
+    }>;
+  } | null;
   parent: {
     id: number;
     children: Array<{
@@ -117,6 +127,12 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
+                        {user.role === 'TEACHER' ? (
+                          <TeacherAssignmentsDialog
+                            queryKey={usersQueryKey}
+                            teacherUser={user}
+                          />
+                        ) : null}
                         {user.role === 'PARENT' ? (
                           <ParentChildrenDialog
                             parent={user}
