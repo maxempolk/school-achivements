@@ -4,10 +4,18 @@ import {
   type AuthenticatedRequest,
   RolesGuard,
 } from '@/auth/guards/roles.guard';
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import type { Request } from 'express';
 
 import { CreateGradeDto } from './dto/create-grade.dto';
 import { GradesService } from './grades.service';
@@ -18,6 +26,15 @@ import { GradesService } from './grades.service';
 @ApiBearerAuth()
 export class GradesController {
   constructor(private readonly gradesService: GradesService) {}
+
+  @Get(':id/audit-log')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  findAuditLog(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.gradesService.findAuditLog(req.user, id);
+  }
 
   @Post()
   create(@Req() req: AuthenticatedRequest, @Body() dto: CreateGradeDto) {

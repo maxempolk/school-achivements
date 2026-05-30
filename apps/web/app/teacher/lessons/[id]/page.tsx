@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { History } from 'lucide-react';
 import {
   createGradeSchema,
   updateLessonSchema,
@@ -23,6 +24,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { innerApi } from '@/lib/api';
@@ -62,6 +70,21 @@ type Student = {
   classId: number;
 };
 
+type GradeAuditLog = {
+  id: number;
+  action: 'CREATED' | 'UPDATED';
+  oldValue: number | null;
+  newValue: number;
+  oldComment: string | null;
+  newComment: string | null;
+  createdAt: string;
+  teacher: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  } | null;
+};
+
 async function getLesson(id: string) {
   const response = await innerApi.get<LessonDetails>(
     `/api/backend/lessons/${id}`,
@@ -78,16 +101,23 @@ async function getStudents(classId: number) {
   return response.data;
 }
 
+async function getGradeAuditLog(gradeId: number) {
+  const response = await innerApi.get<GradeAuditLog[]>(
+    `/api/backend/grades/${gradeId}/audit-log`,
+  );
+  return response.data;
+}
+
 function GradeInput({
   lessonId,
   student,
-  initialValue,
+  initialGrade,
 }: {
   lessonId: number;
   student: Student;
-  initialValue?: number;
+  initialGrade?: LessonDetails['grades'][number];
 }) {
-  const [value, setValue] = useState(initialValue?.toString() ?? '');
+  const [value, setValue] = useState(initialGrade?.value.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -149,9 +179,109 @@ function GradeInput({
         >
           {mutation.isPending ? 'Saving...' : 'Save'}
         </Button>
+        {initialGrade ? <GradeHistoryDialog grade={initialGrade} /> : null}
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
+  );
+}
+
+function GradeHistoryDialog({
+  grade,
+}: {
+  grade: LessonDetails['grades'][number];
+}) {
+  const [open, setOpen] = useState(false);
+  const auditLogQuery = useQuery({
+    queryKey: ['teacher', 'grade-audit-log', grade.id],
+    queryFn: () => getGradeAuditLog(grade.id),
+    enabled: open,
+  });
+
+  return (
+    <>
+      <Button
+        aria-label="Open grade history"
+        size="sm"
+        type="button"
+        variant="outline"
+        onClick={() => setOpen(true)}
+      >
+        <History className="size-4" />
+        History
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Grade history</DialogTitle>
+            <DialogDescription>
+              Review previous changes for this grade.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-y bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium">Action</th>
+                  <th className="px-4 py-3 font-medium">Teacher</th>
+                  <th className="px-4 py-3 text-right font-medium">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogQuery.isLoading ? (
+                  <tr>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
+                      Loading history...
+                    </td>
+                  </tr>
+                ) : null}
+                {auditLogQuery.isError ? (
+                  <tr>
+                    <td className="px-4 py-8 text-destructive" colSpan={4}>
+                      Failed to load history.
+                    </td>
+                  </tr>
+                ) : null}
+                {!auditLogQuery.isLoading &&
+                !auditLogQuery.isError &&
+                auditLogQuery.data?.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
+                      No grade changes yet.
+                    </td>
+                  </tr>
+                ) : null}
+                {(auditLogQuery.data ?? []).map((entry) => (
+                  <tr key={entry.id} className="border-b last:border-b-0">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                      {new Date(entry.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3">{entry.action}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {entry.teacher
+                        ? `${entry.teacher.lastName} ${entry.teacher.firstName}`
+                        : 'Unknown'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <p className="font-medium">
+                        {entry.oldValue ?? 'none'} -&gt; {entry.newValue}
+                      </p>
+                      {entry.oldComment || entry.newComment ? (
+                        <p className="text-xs text-muted-foreground">
+                          {entry.oldComment ?? 'none'} -&gt;{' '}
+                          {entry.newComment ?? 'none'}
+                        </p>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -255,10 +385,10 @@ export default function TeacherLessonPage() {
   });
 
   const gradesByStudentId = useMemo(() => {
-    const map = new Map<number, number>();
+    const map = new Map<number, LessonDetails['grades'][number]>();
 
     for (const grade of lessonQuery.data?.grades ?? []) {
-      map.set(grade.studentId, grade.value);
+      map.set(grade.studentId, grade);
     }
 
     return map;
@@ -410,7 +540,7 @@ export default function TeacherLessonPage() {
                     </td>
                     <td className="px-4 py-3">
                       <GradeInput
-                        initialValue={gradesByStudentId.get(student.id)}
+                        initialGrade={gradesByStudentId.get(student.id)}
                         lessonId={lesson.id}
                         student={student}
                       />

@@ -34,6 +34,11 @@ enum WeekType {
   EVERY
 }
 
+enum GradeAuditAction {
+  CREATED
+  UPDATED
+}
+
 model User {
   id       Int    @id @default(autoincrement())
   email    String @unique
@@ -67,10 +72,11 @@ model Teacher {
   lastName  String
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lessons       Lesson[]
-  scheduleSlots ScheduleSlot[]
-  classes       TeacherClass[]
-  subjects      TeacherSubject[]
+  lessons        Lesson[]
+  scheduleSlots  ScheduleSlot[]
+  classes        TeacherClass[]
+  subjects       TeacherSubject[]
+  gradeAuditLogs GradeAuditLog[]
 }
 
 model Student {
@@ -83,9 +89,10 @@ model Student {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   class Class @relation(fields: [classId], references: [id])
 
-  grades      Grade[]
-  attendances Attendance[]
-  parents     ParentStudent[]
+  grades         Grade[]
+  attendances    Attendance[]
+  parents        ParentStudent[]
+  gradeAuditLogs GradeAuditLog[]
 }
 
 model Parent {
@@ -119,7 +126,7 @@ model Class {
 }
 
 model Subject {
-  id            Int            @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   name          String // "Mathematics"
   shortName     String? // "Math"
   lessons       Lesson[]
@@ -187,7 +194,7 @@ model ScheduleSlot {
 }
 
 model Lesson {
-  id             Int           @id @default(autoincrement())
+  id             Int             @id @default(autoincrement())
   teacherId      Int
   classId        Int
   subjectId      Int
@@ -196,13 +203,14 @@ model Lesson {
   date           DateTime
   topic          String
   homework       String?
-  teacher        Teacher       @relation(fields: [teacherId], references: [id])
-  class          Class         @relation(fields: [classId], references: [id])
-  subject        Subject       @relation(fields: [subjectId], references: [id])
-  classroom      Classroom?    @relation(fields: [classroomId], references: [id], onDelete: SetNull)
-  scheduleSlot   ScheduleSlot? @relation(fields: [scheduleSlotId], references: [id], onDelete: SetNull)
+  teacher        Teacher         @relation(fields: [teacherId], references: [id])
+  class          Class           @relation(fields: [classId], references: [id])
+  subject        Subject         @relation(fields: [subjectId], references: [id])
+  classroom      Classroom?      @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+  scheduleSlot   ScheduleSlot?   @relation(fields: [scheduleSlotId], references: [id], onDelete: SetNull)
   grades         Grade[]
   attendances    Attendance[]
+  gradeAuditLogs GradeAuditLog[]
 
   @@unique([scheduleSlotId, date])
   @@index([classroomId])
@@ -210,15 +218,41 @@ model Lesson {
 }
 
 model Grade {
-  id        Int     @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   lessonId  Int
   studentId Int
   value     Int
   comment   String?
-  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson    Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  auditLogs GradeAuditLog[]
 
   @@unique([lessonId, studentId])
+}
+
+model GradeAuditLog {
+  id         Int              @id @default(autoincrement())
+  gradeId    Int
+  lessonId   Int
+  studentId  Int
+  teacherId  Int?
+  action     GradeAuditAction
+  oldValue   Int?
+  newValue   Int
+  oldComment String?
+  newComment String?
+  createdAt  DateTime         @default(now())
+
+  grade   Grade    @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  lesson  Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  @@index([gradeId])
+  @@index([lessonId])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([createdAt])
 }
 
 model Attendance {
