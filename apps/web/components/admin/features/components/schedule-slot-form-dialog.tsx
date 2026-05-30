@@ -284,6 +284,7 @@ export function ScheduleSlotFormDialog({
                   : undefined
               }
               label="Class"
+              testId="schedule-slot-class-select"
               value={String(classId || '')}
               options={classOptions}
               onValueChange={(value) =>
@@ -300,6 +301,7 @@ export function ScheduleSlotFormDialog({
                   : undefined
               }
               label="Subject"
+              testId="schedule-slot-subject-select"
               value={String(subjectId || '')}
               options={subjectOptions}
               onValueChange={(value) =>
@@ -311,6 +313,7 @@ export function ScheduleSlotFormDialog({
             <SelectField
               error={form.formState.errors.teacherId?.message}
               label="Teacher"
+              testId="schedule-slot-teacher-select"
               value={String(teacherId || '')}
               options={options.teachers}
               onValueChange={(value) =>
@@ -322,6 +325,7 @@ export function ScheduleSlotFormDialog({
             <SelectField
               error={form.formState.errors.classroomId?.message}
               label="Classroom"
+              testId="schedule-slot-classroom-select"
               value={String(classroomId || '')}
               options={options.classrooms}
               onValueChange={(value) =>
@@ -335,6 +339,7 @@ export function ScheduleSlotFormDialog({
           <div className="grid gap-4 sm:grid-cols-3">
             <EnumSelectField
               label="Day"
+              testId="schedule-slot-day-select"
               value={dayOfWeek}
               options={dayOfWeekOptions}
               onValueChange={(value) =>
@@ -345,6 +350,7 @@ export function ScheduleSlotFormDialog({
             />
             <EnumSelectField
               label="Week"
+              testId="schedule-slot-week-select"
               value={weekType}
               options={weekTypeOptions}
               onValueChange={(value) =>
@@ -418,6 +424,7 @@ type SelectFieldProps = {
   error?: string;
   helperText?: string;
   label: string;
+  testId?: string;
   value: string;
   options: ScheduleSlotOption[];
   onValueChange: (value: string) => void;
@@ -427,6 +434,7 @@ function SelectField({
   error,
   helperText,
   label,
+  testId,
   value,
   options,
   onValueChange,
@@ -435,7 +443,11 @@ function SelectField({
     <div className="flex flex-col gap-2">
       <Label>{label}</Label>
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger aria-invalid={Boolean(error)} className="w-full">
+        <SelectTrigger
+          aria-invalid={Boolean(error)}
+          className="w-full"
+          data-testid={testId}
+        >
           <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
         </SelectTrigger>
         <SelectContent>
@@ -458,6 +470,7 @@ function SelectField({
 
 type EnumSelectFieldProps = {
   label: string;
+  testId?: string;
   value: string;
   options: readonly string[];
   onValueChange: (value: string) => void;
@@ -465,6 +478,7 @@ type EnumSelectFieldProps = {
 
 function EnumSelectField({
   label,
+  testId,
   value,
   options,
   onValueChange,
@@ -473,7 +487,7 @@ function EnumSelectField({
     <div className="flex flex-col gap-2">
       <Label>{label}</Label>
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full" data-testid={testId}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

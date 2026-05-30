@@ -27,6 +27,8 @@ async function createClass(page: Page, className: string) {
   const response = await responsePromise;
   expect(response.ok()).toBeTruthy();
   await expect(page.getByText('Class created')).toBeVisible();
+
+  return (await response.json()) as { id: number; name: string };
 }
 
 async function createSubject(page: Page, name: string, shortName: string) {
@@ -41,6 +43,8 @@ async function createSubject(page: Page, name: string, shortName: string) {
   const response = await responsePromise;
   expect(response.ok()).toBeTruthy();
   await expect(page.getByText('Subject created')).toBeVisible();
+
+  return (await response.json()) as { id: number; name: string };
 }
 
 async function createUser(
@@ -73,24 +77,99 @@ async function createUser(
   const response = await responsePromise;
   expect(response.ok()).toBeTruthy();
   await expect(page.getByText('User created')).toBeVisible();
+
+  return (await response.json()) as {
+    id: number;
+    teacher: {
+      id: number;
+    } | null;
+  };
 }
 
-async function createLesson(
+async function getUser(page: Page, userId: number) {
+  const response = await page.request.get(`/api/backend/users/${userId}`);
+
+  expect(response.ok()).toBeTruthy();
+
+  return (await response.json()) as {
+    id: number;
+    teacher: {
+      id: number;
+    } | null;
+  };
+}
+
+async function createClassroom(
   page: Page,
-  className: string,
-  subjectName: string,
+  classroom: {
+    number: string;
+    building: string;
+    capacity: number;
+  },
+) {
+  const response = await page.request.post('/api/backend/classrooms', {
+    data: classroom,
+  });
+
+  expect(response.ok()).toBeTruthy();
+
+  return (await response.json()) as { id: number };
+}
+
+async function assignTeacher(
+  page: Page,
+  teacherId: number,
+  classId: number,
+  subjectId: number,
+) {
+  const response = await page.request.put(
+    `/api/backend/teachers/${teacherId}/assignments`,
+    {
+      data: {
+        classIds: [classId],
+        subjectIds: [subjectId],
+      },
+    },
+  );
+
+  expect(response.ok()).toBeTruthy();
+}
+
+async function createScheduleSlot(
+  page: Page,
+  ids: {
+    classId: number;
+    subjectId: number;
+    teacherId: number;
+    classroomId: number;
+  },
+) {
+  const response = await page.request.post('/api/backend/schedule-slots', {
+    data: {
+      ...ids,
+      dayOfWeek: 'MONDAY',
+      startTime: '09:00',
+      endTime: '09:45',
+      weekType: 'EVERY',
+    },
+  });
+
+  expect(response.ok()).toBeTruthy();
+}
+
+async function startScheduledLesson(
+  page: Page,
   topic: string,
   homework: string,
 ) {
-  await page.goto('/teacher/lessons');
-  await page.getByTestId('create-lesson-button').click();
-  await chooseOption(page, 'lesson-class-select', className);
-  await chooseOption(page, 'lesson-subject-select', subjectName);
-  await page.getByTestId('lesson-date-input').fill('2030-01-01T09:00');
-  await page.getByTestId('lesson-topic-input').fill(topic);
-  await page.getByTestId('lesson-homework-input').fill(homework);
-  await page.getByTestId('save-lesson-button').click();
-  await expect(page.getByText(topic)).toBeVisible();
+  await page.goto('/teacher/schedule');
+  await page.getByRole('button', { name: 'Start lesson' }).click();
+  await expect(page).toHaveURL(/\/teacher\/lessons\/\d+$/);
+  await page.getByLabel('Topic').fill(topic);
+  await page.getByLabel('Homework').fill(homework);
+  await page.getByRole('button', { name: 'Save' }).first().click();
+  await expect(page.getByText('Lesson updated')).toBeVisible();
+  await expect(page.getByDisplayValue(topic)).toBeVisible();
 }
 
 test('admin creates school data, teacher grades lesson, student sees grade', async ({
@@ -99,29 +178,33 @@ test('admin creates school data, teacher grades lesson, student sees grade', asy
   const data = createSchoolFlowData();
 
   await login(page, { ...data.admin, redirectTo: '/admin/classes' });
-  await createClass(page, data.className);
-  await createSubject(
+  const schoolClass = await createClass(page, data.className);
+  const subject = await createSubject(
     page,
     data.lesson.subjectName,
     data.lesson.subjectShortName,
   );
-  await createUser(page, data.teacher, 'TEACHER');
+  const teacherUser = await createUser(page, data.teacher, 'TEACHER');
   await createUser(page, data.student, 'STUDENT', data.className);
+  const classroom = await createClassroom(page, data.classroom);
+  const teacher = await getUser(page, teacherUser.id);
+
+  expect(teacher.teacher).not.toBeNull();
+  await assignTeacher(page, teacher.teacher!.id, schoolClass.id, subject.id);
+  await createScheduleSlot(page, {
+    classId: schoolClass.id,
+    subjectId: subject.id,
+    teacherId: teacher.teacher!.id,
+    classroomId: classroom.id,
+  });
   await logout(page);
 
   await login(page, {
     email: data.teacher.email,
     password: data.teacher.password,
-    redirectTo: '/teacher/lessons',
+    redirectTo: '/teacher/schedule',
   });
-  await createLesson(
-    page,
-    data.className,
-    data.lesson.subjectName,
-    data.lesson.topic,
-    data.lesson.homework,
-  );
-  await page.getByRole('link', { name: 'Open' }).last().click();
+  await startScheduledLesson(page, data.lesson.topic, data.lesson.homework);
   await expect(
     page.getByText(`${data.student.lastName} ${data.student.firstName}`),
   ).toBeVisible();

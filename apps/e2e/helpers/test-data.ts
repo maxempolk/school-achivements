@@ -9,6 +9,11 @@ export function createSchoolFlowData() {
       password: defaultPassword,
     },
     className: `E2E Class ${runId}`,
+    classroom: {
+      number: `E2E-${runId}`,
+      building: 'E2E',
+      capacity: 30,
+    },
     teacher: {
       email: `teacher-e2e-${runId}@test.com`,
       password: defaultPassword,

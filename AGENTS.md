@@ -89,7 +89,7 @@
   - Student/parent read views are available.
 - Testing/deployment
   - API Jest scaffold exists.
-  - Playwright e2e flow exists, but parts may be stale relative to current lesson API/UI.
+  - Playwright e2e school flow covers admin setup, teacher schedule-slot lesson start, grading, and student grade visibility.
   - README documents Vercel/Railway deployment.
 
 ## Data Model Summary
@@ -178,10 +178,8 @@
   - duplicate authenticated user helper types in API services;
   - duplicated `findOneForAdmin` and parse helpers;
   - stricter production CORS;
-  - incomplete frontend middleware TODO;
   - possible shared layout/sidebar refactor for role workspaces.
 - `apps/web/components/teacher/lesson-form-dialog.tsx` exists but is not used by the current teacher lessons page; it posts to `POST /lessons`, which is currently admin-only. Treat as potentially stale.
-- `apps/e2e/tests/school-flow.spec.ts` appears to expect direct teacher lesson creation and may be stale relative to current schedule-slot lesson flow.
 - `apps/api/prisma/finish_schema` looks like a target/reference schema, not the active schema.
 
 ## Commands
