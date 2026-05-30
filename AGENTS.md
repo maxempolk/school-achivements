@@ -148,7 +148,8 @@
   - Swagger is available at `/api/docs`.
 - Auth and permissions
   - Backend role checks are the main permission boundary.
-  - Frontend `middleware.ts` protects app sections by auth cookies; frontend role enforcement beyond auth is not detected.
+  - Frontend `middleware.ts` protects app sections by auth cookies and role-checks `/admin`, `/teacher`, `/student`, and `/parent` route groups from the access token role.
+  - If a protected route has only a refresh token or an unreadable/expired access token, middleware redirects through `/session/refresh?redirect=...` before allowing the route.
 - Frontend
   - App Router pages are grouped by role: `/admin`, `/teacher`, `/student`, `/parent`.
   - Client components use TanStack Query for loading and cache invalidation.

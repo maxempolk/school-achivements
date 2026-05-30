@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 
 import {
@@ -49,7 +50,47 @@ const sections = [
   },
 ] as const;
 
-export default function Home() {
+type AccessTokenPayload = {
+  email?: string;
+  role?: string;
+};
+
+function decodeAccessTokenPayload(accessToken: string) {
+  const [, payload] = accessToken.split('.');
+
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedBase64 = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      '=',
+    );
+    const decodedPayload = Buffer.from(paddedBase64, 'base64').toString(
+      'utf-8',
+    );
+
+    return JSON.parse(decodedPayload) as AccessTokenPayload;
+  } catch {
+    return null;
+  }
+}
+
+async function getCurrentSession() {
+  const accessToken = (await cookies()).get('access_token')?.value;
+
+  if (!accessToken) {
+    return null;
+  }
+
+  return decodeAccessTokenPayload(accessToken);
+}
+
+export default async function Home() {
+  const session = await getCurrentSession();
+
   return (
     <main className="min-h-screen bg-muted/30 px-4 py-8 sm:px-6">
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -61,6 +102,17 @@ export default function Home() {
             Quick links for moving between role workspaces during development.
           </p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Current session</CardTitle>
+            <CardDescription>
+              {session?.role
+                ? `Signed in as ${session.role}${session.email ? ` (${session.email})` : ''}.`
+                : 'No active access token detected.'}
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
           {sections.map((section) => (
