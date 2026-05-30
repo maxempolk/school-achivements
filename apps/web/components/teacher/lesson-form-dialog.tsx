@@ -33,6 +33,8 @@ import {
 import { innerApi } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/api-error';
 
+// TODO: этот файл не используется.
+
 type SchoolClass = {
   id: number;
   name: string;

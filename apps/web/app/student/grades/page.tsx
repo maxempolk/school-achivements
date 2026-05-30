@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,6 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { innerApi } from '@/lib/api';
 
 type Grade = {
@@ -44,7 +56,18 @@ async function getMyGrades() {
   return response.data;
 }
 
+function getStartOfDayTime(value: string) {
+  return new Date(`${value}T00:00:00`).getTime();
+}
+
+function getEndOfDayTime(value: string) {
+  return new Date(`${value}T23:59:59.999`).getTime();
+}
+
 export default function StudentGradesPage() {
+  const [subjectId, setSubjectId] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const {
     data = [],
     isError,
@@ -53,6 +76,53 @@ export default function StudentGradesPage() {
     queryKey: ['student', 'grades'],
     queryFn: getMyGrades,
   });
+
+  const subjects = useMemo(() => {
+    const subjectsById = new Map<number, Grade['lesson']['subject']>();
+
+    for (const grade of data) {
+      subjectsById.set(grade.lesson.subject.id, grade.lesson.subject);
+    }
+
+    return Array.from(subjectsById.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [data]);
+
+  // TODO: Move grade filtering by subject and period to the backend in the future.
+  const filteredGrades = useMemo(() => {
+    const fromTime = dateFrom ? getStartOfDayTime(dateFrom) : undefined;
+    const toTime = dateTo ? getEndOfDayTime(dateTo) : undefined;
+
+    return data.filter((grade) => {
+      if (
+        subjectId !== 'all' &&
+        grade.lesson.subject.id !== Number(subjectId)
+      ) {
+        return false;
+      }
+
+      const lessonTime = new Date(grade.lesson.date).getTime();
+
+      if (fromTime !== undefined && lessonTime < fromTime) {
+        return false;
+      }
+
+      if (toTime !== undefined && lessonTime > toTime) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [data, dateFrom, dateTo, subjectId]);
+
+  const hasActiveFilters = subjectId !== 'all' || dateFrom || dateTo;
+
+  function resetFilters() {
+    setSubjectId('all');
+    setDateFrom('');
+    setDateTo('');
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -66,9 +136,63 @@ export default function StudentGradesPage() {
       <Card>
         <CardHeader>
           <CardTitle>My grades</CardTitle>
-          <CardDescription>{data.length} grade records</CardDescription>
+          <CardDescription>
+            {filteredGrades.length} grade records
+          </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="flex flex-col gap-4 p-0">
+          <div className="grid gap-3 px-4 sm:grid-cols-[minmax(0,1fr)_minmax(9rem,12rem)_minmax(9rem,12rem)_auto] sm:items-end">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="grade-subject-filter">Subject</Label>
+              <Select value={subjectId} onValueChange={setSubjectId}>
+                <SelectTrigger
+                  id="grade-subject-filter"
+                  className="w-full"
+                  data-testid="grade-subject-filter"
+                >
+                  <SelectValue placeholder="All subjects" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">All subjects</SelectItem>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={String(subject.id)}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="grade-date-from">From</Label>
+              <Input
+                id="grade-date-from"
+                data-testid="grade-date-from"
+                type="date"
+                value={dateFrom}
+                onChange={(event) => setDateFrom(event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="grade-date-to">To</Label>
+              <Input
+                id="grade-date-to"
+                data-testid="grade-date-to"
+                type="date"
+                value={dateTo}
+                onChange={(event) => setDateTo(event.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!hasActiveFilters}
+              onClick={resetFilters}
+            >
+              Reset
+            </Button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-y bg-muted/50 text-left text-xs uppercase text-muted-foreground">
@@ -102,7 +226,17 @@ export default function StudentGradesPage() {
                     </td>
                   </tr>
                 ) : null}
-                {data.map((grade) => (
+                {!isLoading &&
+                !isError &&
+                data.length > 0 &&
+                filteredGrades.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-8 text-muted-foreground" colSpan={5}>
+                      No grades match the selected filters.
+                    </td>
+                  </tr>
+                ) : null}
+                {filteredGrades.map((grade) => (
                   <tr key={grade.id} className="border-b last:border-b-0">
                     <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                       {new Date(grade.lesson.date).toLocaleDateString()}
