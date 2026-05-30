@@ -126,11 +126,17 @@ export default function AdminSchedulePage() {
           </p>
         </div>
         <ScheduleSlotFormDialog
+          isLoadingOptions={optionsQuery.isLoading}
           mode="create"
           options={options}
           queryKey={scheduleSlotsQueryKey}
         />
       </div>
+      {optionsQuery.isLoading ? (
+        <p className="text-sm text-muted-foreground">
+          Loading schedule form options...
+        </p>
+      ) : null}
       {optionsQuery.isError ? (
         <p className="text-sm text-destructive">
           Failed to load schedule form options.
@@ -209,6 +215,7 @@ export default function AdminSchedulePage() {
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
                         <ScheduleSlotFormDialog
+                          isLoadingOptions={optionsQuery.isLoading}
                           mode="edit"
                           options={options}
                           queryKey={scheduleSlotsQueryKey}

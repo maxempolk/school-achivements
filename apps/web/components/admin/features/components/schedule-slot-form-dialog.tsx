@@ -84,6 +84,7 @@ type ScheduleSlot = {
 };
 
 type ScheduleSlotFormDialogProps = {
+  isLoadingOptions?: boolean;
   mode: 'create' | 'edit';
   options: ScheduleSlotOptions;
   queryKey: readonly unknown[];
@@ -123,6 +124,7 @@ function optionLabel(option: ScheduleSlotOption) {
 }
 
 export function ScheduleSlotFormDialog({
+  isLoadingOptions = false,
   mode,
   options,
   queryKey,
@@ -252,11 +254,11 @@ export function ScheduleSlotFormDialog({
           data-testid={
             isEdit ? 'edit-schedule-slot-button' : 'create-schedule-slot-button'
           }
-          disabled={!hasOptions}
+          disabled={isLoadingOptions || !hasOptions}
           size="sm"
           variant={isEdit ? 'ghost' : 'default'}
         >
-          {isEdit ? 'Edit' : 'Add'}
+          {isLoadingOptions ? 'Loading...' : isEdit ? 'Edit' : 'Add'}
         </Button>
       </DialogTrigger>
       <DialogContent>
