@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { innerApi } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 
@@ -31,8 +32,12 @@ export default function DashboardPage() {
     return (
       <section className="flex flex-col gap-4">
         <Card>
-          <CardContent className="px-4 py-8 text-sm text-muted-foreground">
-            Loading dashboard...
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-5 w-64" />
           </CardContent>
         </Card>
       </section>

@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { ListSkeleton } from '@/components/ui/list-skeleton';
 import { innerApi } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/api-error';
 
@@ -222,9 +223,7 @@ function AssignmentList<T extends { id: number }>({
   return (
     <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-lg border p-2">
       <p className="px-2 text-sm font-medium">{title}</p>
-      {isLoading ? (
-        <p className="px-2 py-6 text-sm text-muted-foreground">Loading...</p>
-      ) : null}
+      {isLoading ? <ListSkeleton showCheckbox /> : null}
       {isError ? (
         <p className="px-2 py-6 text-sm text-destructive">{errorText}</p>
       ) : null}

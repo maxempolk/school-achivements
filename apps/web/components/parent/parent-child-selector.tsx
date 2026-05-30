@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { selectParentChild, useParentChildren } from './use-parent-children';
 
@@ -29,8 +30,12 @@ export function ParentChildSelector() {
 
   if (isLoading) {
     return (
-      <div className="rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground">
-        Loading children...
+      <div className="flex flex-col gap-2 rounded-md border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+        <Skeleton className="h-9 w-full sm:w-72" />
       </div>
     );
   }

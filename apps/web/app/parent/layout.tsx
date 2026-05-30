@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { ParentChildSelector } from '@/components/parent/parent-child-selector';
 import { ParentHeader } from '@/components/parent/parent-header';
 import { ParentSidebar } from '@/components/parent/parent-sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ParentLayout({ children }: { children: ReactNode }) {
   return (
@@ -19,8 +20,12 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
         <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6">
           <Suspense
             fallback={
-              <div className="rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground">
-                Loading children...
+              <div className="flex flex-col gap-2 rounded-md border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-4 w-56" />
+                </div>
+                <Skeleton className="h-9 w-full sm:w-72" />
               </div>
             }
           >

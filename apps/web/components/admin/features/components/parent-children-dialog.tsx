@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { ListSkeleton } from '@/components/ui/list-skeleton';
 import { innerApi } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/api-error';
 
@@ -111,11 +112,7 @@ export function ParentChildrenDialog({
         </DialogHeader>
 
         <div className="flex max-h-80 flex-col gap-2 overflow-y-auto rounded-lg border p-2">
-          {studentsQuery.isLoading ? (
-            <p className="px-2 py-6 text-sm text-muted-foreground">
-              Loading students...
-            </p>
-          ) : null}
+          {studentsQuery.isLoading ? <ListSkeleton showCheckbox /> : null}
           {studentsQuery.isError ? (
             <p className="px-2 py-6 text-sm text-destructive">
               Failed to load students.

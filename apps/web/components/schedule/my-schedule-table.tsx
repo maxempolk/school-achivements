@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { TableSkeletonRows } from '@/components/ui/table-skeleton';
 import { getApiErrorMessage } from '@/lib/api-error';
 import { innerApi } from '@/lib/api';
 
@@ -180,14 +181,19 @@ export function MyScheduleTable({
             </thead>
             <tbody>
               {isLoading ? (
-                <tr>
-                  <td
-                    className="px-4 py-8 text-muted-foreground"
-                    colSpan={columnCount}
-                  >
-                    Loading schedule...
-                  </td>
-                </tr>
+                <TableSkeletonRows
+                  columns={columnCount}
+                  cellClassNames={[
+                    'h-5 w-20',
+                    'h-5 w-24',
+                    'h-5 w-20',
+                    'h-5 w-32',
+                    'h-5 w-36',
+                    'h-5 w-20',
+                    'h-5 w-16',
+                    'ml-auto h-8 w-24',
+                  ].slice(0, columnCount)}
+                />
               ) : null}
               {isError ? (
                 <tr>

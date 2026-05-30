@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { TableSkeletonRows } from '@/components/ui/table-skeleton';
 import { innerApi } from '@/lib/api';
 
 type AttendanceRecord = {
@@ -135,11 +136,16 @@ export default function ParentAttendancePage() {
               </thead>
               <tbody>
                 {childrenQuery.isLoading || isLoading ? (
-                  <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={5}>
-                      Loading attendance...
-                    </td>
-                  </tr>
+                  <TableSkeletonRows
+                    columns={5}
+                    cellClassNames={[
+                      'h-5 w-20',
+                      'h-5 w-28',
+                      'h-5 w-48',
+                      'h-5 w-32',
+                      'ml-auto h-5 w-16',
+                    ]}
+                  />
                 ) : null}
                 {childrenQuery.isError || isError ? (
                   <tr>

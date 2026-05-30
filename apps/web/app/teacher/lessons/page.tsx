@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TableSkeletonRows } from '@/components/ui/table-skeleton';
 import { innerApi } from '@/lib/api';
 
 type Lesson = {
@@ -74,11 +75,16 @@ export default function TeacherLessonsPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={5}>
-                      Loading lessons...
-                    </td>
-                  </tr>
+                  <TableSkeletonRows
+                    columns={5}
+                    cellClassNames={[
+                      'h-5 w-32',
+                      'h-5 w-20',
+                      'h-5 w-28',
+                      'h-5 w-48',
+                      'ml-auto h-8 w-16',
+                    ]}
+                  />
                 ) : null}
                 {isError ? (
                   <tr>

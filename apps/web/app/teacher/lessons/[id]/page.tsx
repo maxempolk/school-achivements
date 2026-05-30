@@ -33,6 +33,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { TableSkeletonRows } from '@/components/ui/table-skeleton';
 import { innerApi } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/api-error';
 
@@ -230,11 +232,16 @@ function GradeHistoryDialog({
               </thead>
               <tbody>
                 {auditLogQuery.isLoading ? (
-                  <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={4}>
-                      Loading history...
-                    </td>
-                  </tr>
+                  <TableSkeletonRows
+                    columns={4}
+                    rows={4}
+                    cellClassNames={[
+                      'h-5 w-36',
+                      'h-5 w-20',
+                      'h-5 w-32',
+                      'ml-auto h-5 w-24',
+                    ]}
+                  />
                 ) : null}
                 {auditLogQuery.isError ? (
                   <tr>
@@ -405,7 +412,37 @@ export default function TeacherLessonPage() {
 
   if (lessonQuery.isLoading) {
     return (
-      <div className="text-sm text-muted-foreground">Loading lesson...</div>
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-5 w-44" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-10 w-20 self-end" />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <tbody>
+                <TableSkeletonRows columns={3} />
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </section>
     );
   }
 
@@ -502,11 +539,14 @@ export default function TeacherLessonPage() {
               </thead>
               <tbody>
                 {studentsQuery.isLoading ? (
-                  <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
-                      Loading students...
-                    </td>
-                  </tr>
+                  <TableSkeletonRows
+                    columns={3}
+                    cellClassNames={[
+                      'h-5 w-40',
+                      'mx-auto h-4 w-4 rounded-sm',
+                      'ml-auto h-8 w-56',
+                    ]}
+                  />
                 ) : null}
                 {studentsQuery.isError ? (
                   <tr>

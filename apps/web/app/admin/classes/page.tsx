@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { TableSkeletonRows } from '@/components/ui/table-skeleton';
 import { innerApi } from '@/lib/api';
 
 const classesQueryKey = ['admin', 'classes'] as const;
@@ -77,11 +78,14 @@ export default function AdminClassesPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr>
-                    <td className="px-4 py-8 text-muted-foreground" colSpan={3}>
-                      Loading classes...
-                    </td>
-                  </tr>
+                  <TableSkeletonRows
+                    columns={3}
+                    cellClassNames={[
+                      'h-5 w-12',
+                      'h-5 w-40',
+                      'ml-auto h-8 w-24',
+                    ]}
+                  />
                 ) : null}
                 {isError ? (
                   <tr>

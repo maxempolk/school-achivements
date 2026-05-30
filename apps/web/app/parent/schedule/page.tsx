@@ -7,6 +7,7 @@ import {
   selectParentChild,
   useParentChildren,
 } from '@/components/parent/use-parent-children';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ParentSchedulePage() {
   const searchParams = useSearchParams();
@@ -30,7 +31,11 @@ export default function ParentSchedulePage() {
         />
       ) : (
         <div className="rounded-md border bg-background px-4 py-8 text-sm text-muted-foreground">
-          {isLoading ? 'Loading schedule...' : 'Select a linked child first.'}
+          {isLoading ? (
+            <Skeleton className="h-5 w-48" />
+          ) : (
+            'Select a linked child first.'
+          )}
         </div>
       )}
     </section>
