@@ -1,6 +1,8 @@
 'use client';
 
+import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
+import { BookOpen, Calculator, ListChecks, Sigma } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 import { Button } from '@/components/ui/button';
@@ -64,6 +66,20 @@ function getEndOfDayTime(value: string) {
   return new Date(`${value}T23:59:59.999`).getTime();
 }
 
+function formatAverage(value: number | null) {
+  return value === null ? '—' : value.toFixed(1);
+}
+
+function getAverage(grades: Grade[]) {
+  if (grades.length === 0) {
+    return null;
+  }
+
+  const total = grades.reduce((sum, grade) => sum + grade.value, 0);
+
+  return total / grades.length;
+}
+
 export default function StudentGradesPage() {
   const [subjectId, setSubjectId] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
@@ -89,19 +105,11 @@ export default function StudentGradesPage() {
     );
   }, [data]);
 
-  // TODO: Move grade filtering by subject and period to the backend in the future.
-  const filteredGrades = useMemo(() => {
+  const periodGrades = useMemo(() => {
     const fromTime = dateFrom ? getStartOfDayTime(dateFrom) : undefined;
     const toTime = dateTo ? getEndOfDayTime(dateTo) : undefined;
 
     return data.filter((grade) => {
-      if (
-        subjectId !== 'all' &&
-        grade.lesson.subject.id !== Number(subjectId)
-      ) {
-        return false;
-      }
-
       const lessonTime = new Date(grade.lesson.date).getTime();
 
       if (fromTime !== undefined && lessonTime < fromTime) {
@@ -114,7 +122,20 @@ export default function StudentGradesPage() {
 
       return true;
     });
-  }, [data, dateFrom, dateTo, subjectId]);
+  }, [data, dateFrom, dateTo]);
+
+  // TODO: Move grade filtering by subject and period to the backend in the future.
+  const filteredGrades = useMemo(() => {
+    return periodGrades.filter((grade) => {
+      return (
+        subjectId === 'all' || grade.lesson.subject.id === Number(subjectId)
+      );
+    });
+  }, [periodGrades, subjectId]);
+
+  const subjectAverage =
+    subjectId === 'all' ? null : getAverage(filteredGrades);
+  const overallAverage = getAverage(periodGrades);
 
   const hasActiveFilters = subjectId !== 'all' || dateFrom || dateTo;
 
@@ -131,6 +152,29 @@ export default function StudentGradesPage() {
         <p className="text-sm text-muted-foreground">
           Review your latest lesson grades.
         </p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          icon={ListChecks}
+          label="Grade records"
+          value={String(filteredGrades.length)}
+        />
+        <StatCard
+          icon={Sigma}
+          label="Overall average"
+          value={formatAverage(overallAverage)}
+        />
+        <StatCard
+          icon={Calculator}
+          label="Subject average"
+          value={formatAverage(subjectAverage)}
+        />
+        <StatCard
+          icon={BookOpen}
+          label="Subjects"
+          value={String(subjects.length)}
+        />
       </div>
 
       <Card>
@@ -260,5 +304,27 @@ export default function StudentGradesPage() {
         </CardContent>
       </Card>
     </section>
+  );
+}
+
+type StatCardProps = {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+};
+
+function StatCard({ icon: Icon, label, value }: StatCardProps) {
+  return (
+    <Card size="sm">
+      <CardContent className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
+        </div>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <Icon className="size-4" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
