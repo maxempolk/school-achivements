@@ -230,6 +230,7 @@
 6. Do not remove existing functionality unless the task explicitly requires it.
 7. Do not include secrets, tokens, passwords, or private credentials.
 8. After making meaningful changes, update this `AGENTS.md` file if the project context changed.
+9. When adding new frontend routes/pages, also add the route to the development navigation on `apps/web/app/page.tsx`.
 
 ## AGENTS.md Update Policy
 
