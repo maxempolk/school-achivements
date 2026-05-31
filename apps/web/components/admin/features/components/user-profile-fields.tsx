@@ -54,7 +54,7 @@ export function UserProfileFields({ form, disabled }: UserProfileFieldsProps) {
       <div>
         <h3 className="text-sm font-medium">Profile settings</h3>
         <p className="text-sm text-muted-foreground">
-          These fields create the linked {role.toLowerCase()} profile.
+          These fields create or update the linked {role.toLowerCase()} profile.
         </p>
       </div>
 

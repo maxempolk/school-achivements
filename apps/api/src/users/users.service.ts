@@ -23,6 +23,8 @@ export class UsersService {
     teacher: {
       select: {
         id: true,
+        firstName: true,
+        lastName: true,
         classes: {
           select: {
             classId: true,
@@ -33,6 +35,14 @@ export class UsersService {
             subjectId: true,
           },
         },
+      },
+    },
+    student: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        classId: true,
       },
     },
     parent: {
@@ -159,6 +169,16 @@ export class UsersService {
       });
 
       if (existingTeacher) {
+        if (dto.profile) {
+          await tx.teacher.update({
+            where: { id: existingTeacher.id },
+            data: {
+              firstName: dto.profile.firstName,
+              lastName: dto.profile.lastName,
+            },
+          });
+        }
+
         return;
       }
 
@@ -181,6 +201,17 @@ export class UsersService {
       });
 
       if (existingStudent) {
+        if (dto.profile) {
+          await tx.student.update({
+            where: { id: existingStudent.id },
+            data: {
+              firstName: dto.profile.firstName,
+              lastName: dto.profile.lastName,
+              classId: dto.profile.classId,
+            },
+          });
+        }
+
         return;
       }
 

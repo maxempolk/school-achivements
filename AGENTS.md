@@ -171,6 +171,7 @@
 - Teacher-class and teacher-subject assignments limit teacher-visible data and validate schedule-slot combinations.
 - Parent access is read-only and limited to children linked through `ParentStudent`.
 - Form validation errors should be rendered on the form; action results and general API errors should use toasts.
+- Changing a user's role creates or reuses the new role profile, but old role profiles are not deleted automatically because they can be referenced by historical lessons, grades, attendance, assignments, or parent links.
 
 ## Current Development State
 
@@ -218,6 +219,7 @@
   - `pnpm --filter api db:migrate:deploy`
   - `pnpm --filter api db:push`
   - `pnpm --filter api db:seed`
+  - `pnpm --filter api db:seed:admin`
 
 ## Development Rules for AI Agents
 

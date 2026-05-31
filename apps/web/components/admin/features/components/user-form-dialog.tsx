@@ -41,6 +41,15 @@ type AdminUser = {
   id: number;
   email: string;
   role: CreateUserInput['role'];
+  teacher: {
+    firstName: string;
+    lastName: string;
+  } | null;
+  student: {
+    firstName: string;
+    lastName: string;
+    classId: number;
+  } | null;
 };
 
 type UserFormValues = CreateUserInput | UpdateUserInput;
@@ -53,6 +62,44 @@ type UserFormDialogProps = {
 
 const roleOptions = roleSchema.options;
 
+function getDefaultValues(isEdit: boolean, user?: AdminUser): UserFormValues {
+  if (isEdit) {
+    const role = user?.role ?? 'ADMIN';
+    const profile =
+      role === 'TEACHER'
+        ? {
+            firstName: user?.teacher?.firstName ?? '',
+            lastName: user?.teacher?.lastName ?? '',
+            classId: undefined,
+          }
+        : role === 'STUDENT'
+          ? {
+              firstName: user?.student?.firstName ?? '',
+              lastName: user?.student?.lastName ?? '',
+              classId: user?.student?.classId,
+            }
+          : undefined;
+
+    return {
+      email: user?.email ?? '',
+      password: undefined,
+      role,
+      profile,
+    };
+  }
+
+  return {
+    email: '',
+    password: '',
+    role: 'ADMIN',
+    profile: {
+      firstName: '',
+      lastName: '',
+      classId: undefined,
+    },
+  };
+}
+
 export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -62,16 +109,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
     resolver: standardSchemaResolver(
       isEdit ? updateUserSchema : createUserSchema,
     ),
-    defaultValues: {
-      email: user?.email ?? '',
-      password: undefined,
-      role: user?.role ?? 'ADMIN',
-      profile: {
-        firstName: '',
-        lastName: '',
-        classId: undefined,
-      },
-    },
+    defaultValues: getDefaultValues(isEdit, user),
   });
 
   useEffect(() => {
@@ -79,17 +117,8 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
       return;
     }
 
-    form.reset({
-      email: user?.email ?? '',
-      password: undefined,
-      role: user?.role ?? 'ADMIN',
-      profile: {
-        firstName: '',
-        lastName: '',
-        classId: undefined,
-      },
-    });
-  }, [form, open, user]);
+    form.reset(getDefaultValues(isEdit, user));
+  }, [form, isEdit, open, user]);
 
   const mutation = useMutation({
     mutationFn: async (values: UserFormValues) => {
@@ -114,11 +143,13 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
   });
 
   function onSubmit(values: UserFormValues) {
-    if (values.role === 'ADMIN' || values.role === 'PARENT') {
-      values.profile = undefined;
+    const payload = { ...values };
+
+    if (payload.role === 'ADMIN' || payload.role === 'PARENT') {
+      payload.profile = undefined;
     }
 
-    mutation.mutate(values);
+    mutation.mutate(payload);
   }
 
   return (
@@ -221,9 +252,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
             ) : null}
           </div>
 
-          {!isEdit ? (
-            <UserProfileFields form={form} disabled={mutation.isPending} />
-          ) : null}
+          <UserProfileFields form={form} disabled={mutation.isPending} />
 
           <DialogFooter>
             <Button

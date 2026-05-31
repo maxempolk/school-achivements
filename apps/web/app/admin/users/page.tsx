@@ -28,12 +28,20 @@ type AdminUser = {
   role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
   teacher: {
     id: number;
+    firstName: string;
+    lastName: string;
     classes: Array<{
       classId: number;
     }>;
     subjects: Array<{
       subjectId: number;
     }>;
+  } | null;
+  student: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    classId: number;
   } | null;
   parent: {
     id: number;
