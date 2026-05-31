@@ -87,6 +87,10 @@
   - Attendance unique per lesson/student.
   - Teacher can write only for own lesson.
   - Student/parent read views are available.
+- Performance
+  - `GET /performance?classId=...&subjectId=...` returns class achievement statistics for admins and teachers.
+  - Performance reports include class average grade, subject averages, student average grades, grade counts, absences, and attendance rate.
+  - `/dashboard/performance` provides an admin/teacher report page with class and subject filters.
 - Testing/deployment
   - API Jest scaffold exists.
   - Playwright e2e school flow covers admin setup, teacher schedule-slot lesson start, grading, and student grade visibility.
@@ -169,6 +173,7 @@
 - Admin can create a lesson directly; teachers start lessons from their assigned schedule slots.
 - Schedule conflict validation happens before creating or updating a slot.
 - Teacher-class and teacher-subject assignments limit teacher-visible data and validate schedule-slot combinations.
+- Teacher performance reports are limited to the teacher's assigned classes and subjects.
 - Parent access is read-only and limited to children linked through `ParentStudent`.
 - Form validation errors should be rendered on the form; action results and general API errors should use toasts.
 - Changing a user's role creates or reuses the new role profile, but old role profiles are not deleted automatically because they can be referenced by historical lessons, grades, attendance, assignments, or parent links.

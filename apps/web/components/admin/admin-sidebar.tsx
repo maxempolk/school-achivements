@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BarChart3,
   BookOpen,
   CalendarDays,
   DoorOpen,
@@ -53,6 +54,11 @@ const navigationItems = [
     title: 'Schedule',
     href: '/admin/schedule',
     icon: CalendarDays,
+  },
+  {
+    title: 'Performance',
+    href: '/dashboard/performance',
+    icon: BarChart3,
   },
 ];
 

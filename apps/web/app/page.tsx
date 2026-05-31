@@ -20,6 +20,7 @@ const sections = [
       { href: '/admin/subjects', label: 'Subjects' },
       { href: '/admin/classrooms', label: 'Classrooms' },
       { href: '/admin/schedule', label: 'Schedule' },
+      { href: '/dashboard/performance', label: 'Performance' },
     ],
   },
   {
@@ -28,6 +29,7 @@ const sections = [
     links: [
       { href: '/teacher/schedule', label: 'Schedule' },
       { href: '/teacher/lessons', label: 'Lessons' },
+      { href: '/dashboard/performance', label: 'Performance' },
     ],
   },
   {
