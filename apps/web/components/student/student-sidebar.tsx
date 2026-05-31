@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   CalendarCheck,
   CalendarDays,
+  NotebookTabs,
   GraduationCap,
   TableProperties,
 } from 'lucide-react';
@@ -13,6 +14,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+  {
+    title: 'My diary',
+    href: '/student/diary',
+    icon: NotebookTabs,
+  },
   {
     title: 'Grades',
     href: '/student/grades',

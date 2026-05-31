@@ -115,6 +115,7 @@ export class AttendanceService {
         id: true,
         date: true,
         topic: true,
+        homework: true,
         class: {
           select: {
             id: true,

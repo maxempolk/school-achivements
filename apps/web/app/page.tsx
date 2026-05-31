@@ -37,6 +37,7 @@ const sections = [
     title: 'Student',
     description: 'Review personal grades, attendance, and schedule.',
     links: [
+      { href: '/student/diary', label: 'Diary' },
       { href: '/student/grades', label: 'Grades' },
       { href: '/student/attendance', label: 'Attendance' },
       { href: '/student/schedule', label: 'Schedule' },

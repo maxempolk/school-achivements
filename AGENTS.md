@@ -68,6 +68,7 @@
   - Mark attendance on own lessons.
   - Teacher-facing class, subject, and student lists are filtered by assignments.
 - Student
+  - Student diary page combines upcoming schedule lessons, homework, latest grades, attendance, and achievement history.
   - Student grades page.
   - Student weekly schedule page.
   - Student attendance page with statistics.
