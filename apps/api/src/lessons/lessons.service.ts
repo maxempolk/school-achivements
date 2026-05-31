@@ -17,6 +17,11 @@ type LessonFilters = {
   date?: string;
 };
 
+type JournalFilters = {
+  classId?: string;
+  subjectId?: string;
+};
+
 // TODO: вроде как где то уже есть такой тип.
 type AuthenticatedUser = {
   id: number;
@@ -165,6 +170,62 @@ export class LessonsService {
     return lesson;
   }
 
+  async findJournal(userId: number, filters: JournalFilters) {
+    const classId = this.parseRequiredPositiveInt(filters.classId, 'classId');
+    const subjectId = this.parseRequiredPositiveInt(
+      filters.subjectId,
+      'subjectId',
+    );
+    const teacher = await this.prisma.teacher.findUnique({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+        classes: {
+          where: {
+            classId,
+          },
+          select: {
+            classId: true,
+          },
+        },
+        subjects: {
+          where: {
+            subjectId,
+          },
+          select: {
+            subjectId: true,
+          },
+        },
+      },
+    });
+
+    if (!teacher) {
+      throw new ForbiddenException('Teacher profile is required');
+    }
+
+    if (teacher.classes.length === 0) {
+      throw new ForbiddenException('You can view only your own classes');
+    }
+
+    if (teacher.subjects.length === 0) {
+      throw new ForbiddenException('You can view only your own subjects');
+    }
+
+    return this.prisma.lesson.findMany({
+      where: {
+        teacherId: teacher.id,
+        classId,
+        subjectId,
+      },
+      include: this.lessonDetailsInclude,
+      orderBy: {
+        date: 'asc',
+      },
+    });
+  }
+
   async update(userId: number, id: number, dto: UpdateLessonDto) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id },
@@ -204,6 +265,14 @@ export class LessonsService {
     }
 
     return parsed;
+  }
+
+  private parseRequiredPositiveInt(value: string | undefined, field: string) {
+    if (value === undefined) {
+      throw new BadRequestException(`${field} is required`);
+    }
+
+    return this.parsePositiveInt(value, field);
   }
 
   private resolveLessonDate(date: string, slotStartTime: Date) {

@@ -60,6 +60,7 @@
   - Teacher assignment management through `TeacherClass` and `TeacherSubject`.
 - Teacher
   - Teacher schedule view.
+  - Teacher class journal view for class/subject lesson columns.
   - Start/open lesson from a schedule slot.
   - Lesson list and lesson detail view.
   - Edit own lesson topic/homework.
@@ -76,6 +77,7 @@
 - Lessons
   - Admin-only generic `POST /lessons`.
   - Teacher-only `POST /lessons/from-schedule-slot`.
+  - Teacher-only `GET /lessons/journal` returns own lessons with grades and attendance for class journal tables.
   - Teacher access limited to own lessons.
   - `Lesson` can reference a `ScheduleSlot`; `@@unique([scheduleSlotId, date])`.
 - Schedule

@@ -61,6 +61,19 @@ export class LessonsController {
     });
   }
 
+  @Get('journal')
+  @Roles(Role.TEACHER)
+  findJournal(
+    @Req() req: AuthenticatedRequest,
+    @Query('classId') classId?: string,
+    @Query('subjectId') subjectId?: string,
+  ) {
+    return this.lessonsService.findJournal(req.user.id, {
+      classId,
+      subjectId,
+    });
+  }
+
   @Get(':id')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   findOne(

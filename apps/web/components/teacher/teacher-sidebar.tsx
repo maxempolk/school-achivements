@@ -2,12 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, CalendarDays, GraduationCap } from 'lucide-react';
+import {
+  BarChart3,
+  BookOpen,
+  BookOpenCheck,
+  CalendarDays,
+  GraduationCap,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+  {
+    title: 'Class journal',
+    href: '/teacher/journal',
+    icon: BookOpenCheck,
+  },
   {
     title: 'Lessons',
     href: '/teacher/lessons',

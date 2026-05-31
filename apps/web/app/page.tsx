@@ -27,6 +27,7 @@ const sections = [
     title: 'Teacher',
     description: 'Open lessons, schedules, grades, and attendance.',
     links: [
+      { href: '/teacher/journal', label: 'Class journal' },
       { href: '/teacher/schedule', label: 'Schedule' },
       { href: '/teacher/lessons', label: 'Lessons' },
       { href: '/dashboard/performance', label: 'Performance' },
