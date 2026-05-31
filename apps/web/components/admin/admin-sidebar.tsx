@@ -4,11 +4,8 @@ import {
   BookOpen,
   CalendarDays,
   DoorOpen,
-  GraduationCap,
   LayoutDashboard,
   School,
-  Settings,
-  UserRound,
   UsersRound,
 } from 'lucide-react';
 
@@ -56,11 +53,6 @@ const navigationItems = [
     title: 'Schedule',
     href: '/admin/schedule',
     icon: CalendarDays,
-  },
-  {
-    title: 'Settings',
-    href: '/admin/settings',
-    icon: Settings,
   },
 ];
 

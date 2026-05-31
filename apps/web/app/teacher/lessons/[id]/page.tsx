@@ -87,6 +87,8 @@ type GradeAuditLog = {
   } | null;
 };
 
+// TODO: заблокировать выставление оценок или отмечение присутствующих до даты начала урока
+
 async function getLesson(id: string) {
   const response = await innerApi.get<LessonDetails>(
     `/api/backend/lessons/${id}`,

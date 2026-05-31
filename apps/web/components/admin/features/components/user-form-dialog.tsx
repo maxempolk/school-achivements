@@ -61,6 +61,19 @@ type UserFormDialogProps = {
 };
 
 const roleOptions = roleSchema.options;
+type UserRole = CreateUserInput['role'];
+
+function getEmptyProfileForRole(role: UserRole) {
+  if (role !== 'TEACHER' && role !== 'STUDENT') {
+    return undefined;
+  }
+
+  return {
+    firstName: '',
+    lastName: '',
+    classId: undefined,
+  };
+}
 
 function getDefaultValues(isEdit: boolean, user?: AdminUser): UserFormValues {
   if (isEdit) {
@@ -92,11 +105,7 @@ function getDefaultValues(isEdit: boolean, user?: AdminUser): UserFormValues {
     email: '',
     password: '',
     role: 'ADMIN',
-    profile: {
-      firstName: '',
-      lastName: '',
-      classId: undefined,
-    },
+    profile: undefined,
   };
 }
 
@@ -225,7 +234,16 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
               control={form.control}
               name="role"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value}
+                  onValueChange={(value: UserRole) => {
+                    field.onChange(value);
+                    form.setValue('profile', getEmptyProfileForRole(value), {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                >
                   <SelectTrigger
                     className="w-full"
                     aria-invalid={Boolean(form.formState.errors.role)}
