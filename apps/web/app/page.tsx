@@ -47,6 +47,7 @@ const sections = [
     title: 'Parent',
     description: 'Review linked child progress.',
     links: [
+      { href: '/parent/diary', label: 'Diary' },
       { href: '/parent/grades', label: 'Grades' },
       { href: '/parent/attendance', label: 'Attendance' },
       { href: '/parent/schedule', label: 'Schedule' },

@@ -74,6 +74,7 @@
   - Student attendance page with statistics.
 - Parent
   - Parent layout with child selector.
+  - Parent diary page combines selected child schedule, homework, latest grades, attendance, and achievement history.
   - Parent can view linked child grades, schedule, and attendance statistics.
 - Lessons
   - Admin-only generic `POST /lessons`.

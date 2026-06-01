@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   CalendarDays,
   GraduationCap,
+  NotebookTabs,
   TableProperties,
   Users,
 } from 'lucide-react';
@@ -14,6 +15,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+  {
+    title: 'Child diary',
+    href: '/parent/diary',
+    icon: NotebookTabs,
+  },
   {
     title: 'Grades',
     href: '/parent/grades',
