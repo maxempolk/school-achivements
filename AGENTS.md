@@ -91,6 +91,11 @@
   - Attendance unique per lesson/student.
   - Teacher can write only for own lesson.
   - Student/parent read views are available.
+- Notifications
+  - Materialized database-backed notifications for students and parents.
+  - Triggers: grade addition/change, homework addition/change, and schedule creation/updates/removal.
+  - Enpoints for fetch, unread count, single read, and mark all as read.
+  - UI headers display badged count; pages render styled notification feeds.
 - Performance
   - `GET /performance?classId=...&subjectId=...` returns class achievement statistics for admins and teachers.
   - Performance reports include class average grade, subject averages, student average grades, grade counts, absences, and attendance rate.
@@ -145,6 +150,10 @@
   - Links lesson/student with unique `@@unique([lessonId, studentId])`.
 - `Attendance`
   - Links lesson/student with unique `@@unique([lessonId, studentId])`.
+- `Notification`
+  - Links user (recipient), optional grade, optional lesson, optional schedule slot.
+  - Enums: `NEW_GRADE`, `GRADE_UPDATED`, `HOMEWORK_UPDATED`, `SCHEDULE_CHANGED`.
+  - Fields: `title`, `message`, `isRead`, `createdAt`.
 
 ## API and Frontend Patterns
 

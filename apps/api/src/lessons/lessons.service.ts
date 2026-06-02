@@ -5,11 +5,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, NotificationType } from '@prisma/client';
 
 import { AdminCreateLessonDto } from './dto/admin-create-lesson.dto';
 import { CreateLessonFromScheduleSlotDto } from './dto/create-lesson-from-schedule-slot.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 type LessonFilters = {
   teacherId?: string;
@@ -31,10 +32,13 @@ type AuthenticatedUser = {
 
 @Injectable()
 export class LessonsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
-  create(dto: AdminCreateLessonDto) {
-    return this.prisma.lesson.create({
+  async create(dto: AdminCreateLessonDto) {
+    const result = await this.prisma.lesson.create({
       data: {
         teacherId: dto.teacherId,
         classId: dto.classId,
@@ -47,6 +51,12 @@ export class LessonsService {
       },
       include: this.lessonInclude,
     });
+
+    if (dto.homework) {
+      await this.sendHomeworkNotification(result);
+    }
+
+    return result;
   }
 
   async createFromScheduleSlot(
@@ -231,6 +241,7 @@ export class LessonsService {
       where: { id },
       select: {
         id: true,
+        homework: true,
         teacher: {
           select: {
             userId: true,
@@ -247,7 +258,7 @@ export class LessonsService {
       throw new ForbiddenException('You can update only your own lessons');
     }
 
-    return this.prisma.lesson.update({
+    const result = await this.prisma.lesson.update({
       where: { id },
       data: {
         topic: dto.topic,
@@ -255,6 +266,32 @@ export class LessonsService {
       },
       include: this.lessonDetailsInclude,
     });
+
+    if (dto.homework !== undefined && dto.homework !== lesson.homework) {
+      await this.sendHomeworkNotification(result);
+    }
+
+    return result;
+  }
+
+  private async sendHomeworkNotification(lesson: any) {
+    if (!lesson.homework) return;
+    try {
+      const subjectName = lesson.subject.name;
+      const formattedDate = new Date(lesson.date).toLocaleDateString('uk-UA');
+      const title = 'Домашнє завдання оновлено';
+      const message = `Оновлено домашнє завдання з предмету "${subjectName}" на ${formattedDate}: ${lesson.homework}`;
+
+      await this.notificationsService.notifyClassAndParents(
+        lesson.classId,
+        NotificationType.HOMEWORK_UPDATED,
+        title,
+        message,
+        { lessonId: lesson.id },
+      );
+    } catch (err) {
+      console.error('Failed to send homework notification:', err);
+    }
   }
 
   private parsePositiveInt(value: string, field: string) {

@@ -41,6 +41,7 @@ const sections = [
       { href: '/student/grades', label: 'Grades' },
       { href: '/student/attendance', label: 'Attendance' },
       { href: '/student/schedule', label: 'Schedule' },
+      { href: '/student/notifications', label: 'Notifications' },
     ],
   },
   {
@@ -51,6 +52,7 @@ const sections = [
       { href: '/parent/grades', label: 'Grades' },
       { href: '/parent/attendance', label: 'Attendance' },
       { href: '/parent/schedule', label: 'Schedule' },
+      { href: '/parent/notifications', label: 'Notifications' },
     ],
   },
 ] as const;

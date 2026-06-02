@@ -8,6 +8,7 @@ import {
   NotebookTabs,
   GraduationCap,
   TableProperties,
+  Bell,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,11 @@ const navItems = [
     title: 'Attendance',
     href: '/student/attendance',
     icon: CalendarCheck,
+  },
+  {
+    title: 'Notifications',
+    href: '/student/notifications',
+    icon: Bell,
   },
 ];
 

@@ -3,11 +3,15 @@
 import { useState } from 'react';
 import { Bell, LogOut, Menu, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { StudentSidebar } from '@/components/student/student-sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { innerApi } from '@/lib/api';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +24,19 @@ import {
 export function StudentHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
+
+  const { data: unreadData } = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: async () => {
+      const res = await innerApi.get<{ count: number }>(
+        '/api/backend/notifications/unread-count',
+      );
+      return res.data;
+    },
+    refetchInterval: 15000,
+  });
+
+  const unreadCount = unreadData?.count ?? 0;
 
   async function handleLogout() {
     let response: Response;
@@ -63,9 +80,21 @@ export function StudentHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button aria-label="Notifications" size="icon" variant="ghost">
-            <Bell />
-          </Button>
+          <Link
+            href="/student/notifications"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'icon' }),
+              'relative',
+            )}
+            aria-label="Notifications"
+          >
+            <Bell className="size-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
+                {unreadCount}
+              </span>
+            )}
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="gap-2 px-1.5" variant="ghost">

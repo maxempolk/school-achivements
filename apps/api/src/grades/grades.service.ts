@@ -4,9 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { GradeAuditAction, Prisma, Role } from '@prisma/client';
+import {
+  GradeAuditAction,
+  Prisma,
+  Role,
+  NotificationType,
+} from '@prisma/client';
 
 import { CreateGradeDto } from './dto/create-grade.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 type AuthenticatedUser = {
   id: number;
@@ -16,7 +22,10 @@ type AuthenticatedUser = {
 
 @Injectable()
 export class GradesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async create(userId: number, dto: CreateGradeDto) {
     const teacher = await this.prisma.teacher.findUnique({
@@ -62,8 +71,9 @@ export class GradesService {
     }
 
     const nextComment = dto.comment ?? null;
+    let isUpdate = false;
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const existingGrade = await tx.grade.findUnique({
         where: {
           lessonId_studentId: {
@@ -90,6 +100,8 @@ export class GradesService {
             include: this.gradeInclude,
           });
         }
+
+        isUpdate = true;
 
         const updatedGrade = await tx.grade.update({
           where: {
@@ -145,6 +157,31 @@ export class GradesService {
 
       return createdGrade;
     });
+
+    try {
+      const subjectName = result.lesson.subject.name;
+      const formattedDate = new Date(result.lesson.date).toLocaleDateString(
+        'uk-UA',
+      );
+
+      const title = isUpdate ? 'Оцінку змінено' : 'Нова оцінка';
+      const message = isUpdate
+        ? `Оцінку з предмету "${subjectName}" за урок від ${formattedDate} змінено на: ${result.value}.`
+        : `Отримано нову оцінку: ${result.value} з предмету "${subjectName}" за урок від ${formattedDate}.`;
+
+      await this.notificationsService.notifyStudentAndParents(
+        dto.studentId,
+        isUpdate ? NotificationType.GRADE_UPDATED : NotificationType.NEW_GRADE,
+        title,
+        message,
+        { gradeId: result.id, lessonId: dto.lessonId },
+      );
+    } catch (err) {
+      // Don't fail the grade creation if notification dispatch fails
+      console.error('Failed to dispatch grade notification:', err);
+    }
+
+    return result;
   }
 
   async findAuditLog(user: AuthenticatedUser, gradeId: number) {

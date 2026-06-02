@@ -15,6 +15,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { ParentsModule } from './parents/parents.module';
 import { PerformanceModule } from './performance/performance.module';
 import { TeachersModule } from './teachers/teachers.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TeachersModule } from './teachers/teachers.module';
     ParentsModule,
     PerformanceModule,
     TeachersModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

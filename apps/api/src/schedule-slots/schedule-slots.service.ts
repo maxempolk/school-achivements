@@ -5,10 +5,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Role, WeekType } from '@prisma/client';
+import { Prisma, Role, WeekType, NotificationType } from '@prisma/client';
 
 import { CreateScheduleSlotDto } from './dto/create-schedule-slot.dto';
 import { UpdateScheduleSlotDto } from './dto/update-schedule-slot.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 // TODO: как будто бы где то было)))
 type AuthenticatedUser = {
@@ -30,7 +31,10 @@ type ScheduleSlotConflictCandidate = {
 
 @Injectable()
 export class ScheduleSlotsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   findAll() {
     return this.prisma.scheduleSlot.findMany({
@@ -95,10 +99,19 @@ export class ScheduleSlotsService {
     await this.validateNoConflicts(data);
     await this.validateTeacherAssignments(data);
 
-    return this.prisma.scheduleSlot.create({
+    const result = await this.prisma.scheduleSlot.create({
       data,
       include: this.scheduleSlotInclude,
     });
+
+    await this.sendScheduleNotification(
+      result.classId,
+      'Розклад змінено',
+      `Додано новий урок у розклад: ${result.subject.name} (${result.dayOfWeek}, ${this.formatTime(result.startTime)}-${this.formatTime(result.endTime)})`,
+      result.id,
+    );
+
+    return result;
   }
 
   async update(id: number, dto: UpdateScheduleSlotDto) {
@@ -129,20 +142,62 @@ export class ScheduleSlotsService {
     await this.validateNoConflicts(candidate, id);
     await this.validateTeacherAssignments(candidate);
 
-    return this.prisma.scheduleSlot.update({
+    const result = await this.prisma.scheduleSlot.update({
       where: { id },
       data,
       include: this.scheduleSlotInclude,
     });
+
+    await this.sendScheduleNotification(
+      result.classId,
+      'Розклад змінено',
+      `Оновлено урок у розкладі: ${result.subject.name} (${result.dayOfWeek}, ${this.formatTime(result.startTime)}-${this.formatTime(result.endTime)})`,
+      result.id,
+    );
+
+    return result;
   }
 
   async remove(id: number) {
     await this.findOne(id);
 
-    return this.prisma.scheduleSlot.delete({
+    const result = await this.prisma.scheduleSlot.delete({
       where: { id },
       include: this.scheduleSlotInclude,
     });
+
+    await this.sendScheduleNotification(
+      result.classId,
+      'Розклад змінено',
+      `Видалено урок з розкладу: ${result.subject.name} (${result.dayOfWeek}, ${this.formatTime(result.startTime)}-${this.formatTime(result.endTime)})`,
+    );
+
+    return result;
+  }
+
+  private formatTime(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  private async sendScheduleNotification(
+    classId: number,
+    title: string,
+    message: string,
+    scheduleSlotId?: number,
+  ) {
+    try {
+      await this.notificationsService.notifyClassAndParents(
+        classId,
+        NotificationType.SCHEDULE_CHANGED,
+        title,
+        message,
+        { scheduleSlotId },
+      );
+    } catch (err) {
+      console.error('Failed to send schedule notification:', err);
+    }
   }
 
   getOptions() {

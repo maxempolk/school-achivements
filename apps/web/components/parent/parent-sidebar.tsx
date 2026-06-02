@@ -9,6 +9,7 @@ import {
   NotebookTabs,
   TableProperties,
   Users,
+  Bell,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,11 @@ const navItems = [
     title: 'Attendance',
     href: '/parent/attendance',
     icon: CalendarCheck,
+  },
+  {
+    title: 'Notifications',
+    href: '/parent/notifications',
+    icon: Bell,
   },
 ];
 

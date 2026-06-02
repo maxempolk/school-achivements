@@ -49,6 +49,7 @@ model User {
   student              Student?
   parent               Parent?
   refreshTokenSessions RefreshTokenSession[]
+  notifications        Notification[]
 }
 
 model RefreshTokenSession {
@@ -179,11 +180,12 @@ model ScheduleSlot {
   endTime     DateTime
   weekType    WeekType  @default(EVERY)
 
-  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject   Subject   @relation(fields: [subjectId], references: [id])
-  teacher   Teacher   @relation(fields: [teacherId], references: [id])
-  classroom Classroom @relation(fields: [classroomId], references: [id])
-  lessons   Lesson[]
+  class         Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject       Subject        @relation(fields: [subjectId], references: [id])
+  teacher       Teacher        @relation(fields: [teacherId], references: [id])
+  classroom     Classroom      @relation(fields: [classroomId], references: [id])
+  lessons       Lesson[]
+  notifications Notification[]
 
   @@unique([classId, dayOfWeek, startTime, weekType])
   @@unique([teacherId, dayOfWeek, startTime, weekType])
@@ -211,6 +213,7 @@ model Lesson {
   grades         Grade[]
   attendances    Attendance[]
   gradeAuditLogs GradeAuditLog[]
+  notifications  Notification[]
 
   @@unique([scheduleSlotId, date])
   @@index([classroomId])
@@ -218,14 +221,15 @@ model Lesson {
 }
 
 model Grade {
-  id        Int             @id @default(autoincrement())
-  lessonId  Int
-  studentId Int
-  value     Int
-  comment   String?
-  lesson    Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  auditLogs GradeAuditLog[]
+  id            Int             @id @default(autoincrement())
+  lessonId      Int
+  studentId     Int
+  value         Int
+  comment       String?
+  lesson        Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  student       Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  auditLogs     GradeAuditLog[]
+  notifications Notification[]
 
   @@unique([lessonId, studentId])
 }
@@ -270,3 +274,31 @@ model Attendance {
 }
 
 // `User`, `Teacher`, `Student`, `Class`, `Subject`
+
+enum NotificationType {
+  NEW_GRADE
+  GRADE_UPDATED
+  HOMEWORK_UPDATED
+  SCHEDULE_CHANGED
+}
+
+model Notification {
+  id             Int              @id @default(autoincrement())
+  userId         Int
+  type           NotificationType
+  title          String
+  message        String
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  gradeId        Int?
+  lessonId       Int?
+  scheduleSlotId Int?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grade        Grade?        @relation(fields: [gradeId], references: [id], onDelete: SetNull)
+  lesson       Lesson?       @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  scheduleSlot ScheduleSlot? @relation(fields: [scheduleSlotId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
