@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
 import { BookOpen, Calculator, ListChecks, Sigma } from 'lucide-react';
 

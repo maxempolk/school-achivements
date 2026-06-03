@@ -135,7 +135,7 @@ function formatSubjectLabel(subject: Subject) {
     : subject.name;
 }
 
-export default function PerformancePage() {
+export function PerformanceView() {
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState(allSubjectsValue);
 

@@ -31,7 +31,7 @@ const navItems = [
   },
   {
     title: 'Performance',
-    href: '/dashboard/performance',
+    href: '/teacher/performance',
     icon: BarChart3,
   },
 ];

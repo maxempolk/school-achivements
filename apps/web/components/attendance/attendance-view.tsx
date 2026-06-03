@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { useMemo } from 'react';
 import { CalendarCheck, CalendarX, Percent, Sigma } from 'lucide-react';
 

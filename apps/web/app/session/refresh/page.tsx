@@ -8,11 +8,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 function getSafeRedirectPath(redirect: string | null) {
   if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
-    return '/dashboard';
+    return '/';
   }
 
   if (redirect.startsWith('/session/refresh')) {
-    return '/dashboard';
+    return '/';
   }
 
   return redirect;

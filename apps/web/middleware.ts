@@ -13,8 +13,8 @@ const refreshTokenCookie = 'refresh_token';
 const roleHomePath: Record<Role, string> = {
   ADMIN: '/admin',
   TEACHER: '/teacher/schedule',
-  STUDENT: '/student/grades',
-  PARENT: '/parent/grades',
+  STUDENT: '/student/diary',
+  PARENT: '/parent/diary',
 };
 
 const protectedRoleRoutes: Array<{
@@ -111,6 +111,9 @@ function getRequiredRole(pathname: string) {
 export function middleware(req: NextRequest) {
   const accessToken = req.cookies.get(accessTokenCookie)?.value;
   const refreshToken = req.cookies.get(refreshTokenCookie)?.value;
+  const { pathname } = req.nextUrl;
+
+  const isRoot = pathname === '/';
 
   if (!accessToken && !refreshToken) {
     return redirectToLogin(req);
@@ -126,7 +129,11 @@ export function middleware(req: NextRequest) {
     return refreshToken ? redirectToSessionRefresh(req) : redirectToLogin(req);
   }
 
-  const requiredRole = getRequiredRole(req.nextUrl.pathname);
+  if (isRoot) {
+    return NextResponse.redirect(new URL(roleHomePath[role], req.url));
+  }
+
+  const requiredRole = getRequiredRole(pathname);
 
   if (requiredRole && requiredRole !== role) {
     return NextResponse.redirect(new URL(roleHomePath[role], req.url));
@@ -137,7 +144,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
+    '/',
     '/admin/:path*',
     '/teacher/:path*',
     '/student/:path*',

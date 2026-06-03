@@ -23,7 +23,7 @@ import { getApiErrorMessage } from '@/lib/api-error';
 
 function getSafeRedirectPath(redirect: string | null) {
   if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
-    return '/dashboard';
+    return '/';
   }
 
   return redirect;

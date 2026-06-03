@@ -99,7 +99,7 @@
 - Performance
   - `GET /performance?classId=...&subjectId=...` returns class achievement statistics for admins and teachers.
   - Performance reports include class average grade, subject averages, student average grades, grade counts, absences, and attendance rate.
-  - `/dashboard/performance` provides an admin/teacher report page with class and subject filters.
+  - `/admin/performance` and `/teacher/performance` provide report pages for admins and teachers with class and subject filters.
 - Testing/deployment
   - API Jest scaffold exists.
   - Playwright e2e school flow covers admin setup, teacher schedule-slot lesson start, grading, and student grade visibility.
@@ -165,7 +165,8 @@
   - Swagger is available at `/api/docs`.
 - Auth and permissions
   - Backend role checks are the main permission boundary.
-  - Frontend `middleware.ts` protects app sections by auth cookies and role-checks `/admin`, `/teacher`, `/student`, and `/parent` route groups from the access token role.
+  - Frontend `middleware.ts` protects app sections by auth cookies and role-checks `/admin`, `/teacher`, `/student`, and `/parent` route groups.
+  - If a user accesses the root `/` or `/dashboard`, the middleware (or fallback root page) automatically redirects them to their corresponding role homepage (e.g. `/admin`, `/teacher/schedule`, `/student/diary`, `/parent/diary`). Unauthenticated users are redirected to `/login`.
   - If a protected route has only a refresh token or an unreadable/expired access token, middleware redirects through `/session/refresh?redirect=...` before allowing the route.
 - Frontend
   - App Router pages are grouped by role: `/admin`, `/teacher`, `/student`, `/parent`.

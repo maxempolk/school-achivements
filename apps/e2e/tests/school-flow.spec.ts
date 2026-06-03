@@ -169,7 +169,7 @@ async function startScheduledLesson(
   await page.getByLabel('Homework').fill(homework);
   await page.getByRole('button', { name: 'Save' }).first().click();
   await expect(page.getByText('Lesson updated')).toBeVisible();
-  await expect(page.getByDisplayValue(topic)).toBeVisible();
+  await expect(page.locator('#lesson-topic')).toHaveValue(topic);
 }
 
 test('admin creates school data, teacher grades lesson, student sees grade', async ({
@@ -226,6 +226,6 @@ test('admin creates school data, teacher grades lesson, student sees grade', asy
 
   await expect(page.getByText(data.lesson.topic)).toBeVisible();
   await expect(
-    page.getByRole('cell', { name: data.lesson.grade }),
+    page.getByRole('cell', { name: data.lesson.grade, exact: true }),
   ).toBeVisible();
 });

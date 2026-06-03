@@ -57,7 +57,7 @@ const navigationItems = [
   },
   {
     title: 'Performance',
-    href: '/dashboard/performance',
+    href: '/admin/performance',
     icon: BarChart3,
   },
 ];
