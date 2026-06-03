@@ -9,6 +9,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
 import { PerformanceService } from './performance.service';
+import { GetPerformanceQueryDto } from './dto/get-performance-query.dto';
 
 @Controller('performance')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -20,12 +21,8 @@ export class PerformanceController {
   @Get()
   getPerformance(
     @Req() req: AuthenticatedRequest,
-    @Query('classId') classId?: string,
-    @Query('subjectId') subjectId?: string,
+    @Query() query: GetPerformanceQueryDto,
   ) {
-    return this.performanceService.getPerformance(req.user, {
-      classId,
-      subjectId,
-    });
+    return this.performanceService.getPerformance(req.user, query);
   }
 }

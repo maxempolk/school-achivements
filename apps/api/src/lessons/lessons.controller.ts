@@ -22,6 +22,8 @@ import type { Request } from 'express';
 
 import { AdminCreateLessonDto } from './dto/admin-create-lesson.dto';
 import { CreateLessonFromScheduleSlotDto } from './dto/create-lesson-from-schedule-slot.dto';
+import { GetLessonsQueryDto } from './dto/get-lessons-query.dto';
+import { GetJournalQueryDto } from './dto/get-journal-query.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { LessonsService } from './lessons.service';
 
@@ -50,28 +52,18 @@ export class LessonsController {
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   findAll(
     @Req() req: AuthenticatedRequest,
-    @Query('teacherId') teacherId?: string,
-    @Query('classId') classId?: string,
-    @Query('date') date?: string,
+    @Query() query: GetLessonsQueryDto,
   ) {
-    return this.lessonsService.findAll(req.user, {
-      teacherId,
-      classId,
-      date,
-    });
+    return this.lessonsService.findAll(req.user, query);
   }
 
   @Get('journal')
   @Roles(Role.TEACHER)
   findJournal(
     @Req() req: AuthenticatedRequest,
-    @Query('classId') classId?: string,
-    @Query('subjectId') subjectId?: string,
+    @Query() query: GetJournalQueryDto,
   ) {
-    return this.lessonsService.findJournal(req.user.id, {
-      classId,
-      subjectId,
-    });
+    return this.lessonsService.findJournal(req.user.id, query);
   }
 
   @Get(':id')

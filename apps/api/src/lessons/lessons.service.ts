@@ -9,19 +9,10 @@ import { Prisma, Role, NotificationType } from '@prisma/client';
 
 import { AdminCreateLessonDto } from './dto/admin-create-lesson.dto';
 import { CreateLessonFromScheduleSlotDto } from './dto/create-lesson-from-schedule-slot.dto';
+import { GetLessonsQueryDtoType } from './dto/get-lessons-query.dto';
+import { GetJournalQueryDtoType } from './dto/get-journal-query.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-
-type LessonFilters = {
-  teacherId?: string;
-  classId?: string;
-  date?: string;
-};
-
-type JournalFilters = {
-  classId?: string;
-  subjectId?: string;
-};
 
 // TODO: вроде как где то уже есть такой тип.
 type AuthenticatedUser = {
@@ -120,7 +111,7 @@ export class LessonsService {
     });
   }
 
-  async findAll(user: AuthenticatedUser, filters: LessonFilters) {
+  async findAll(user: AuthenticatedUser, filters: GetLessonsQueryDtoType) {
     const where: Prisma.LessonWhereInput = {};
 
     if (user.role === Role.TEACHER) {
@@ -128,11 +119,11 @@ export class LessonsService {
         userId: user.id,
       };
     } else if (filters.teacherId) {
-      where.teacherId = this.parsePositiveInt(filters.teacherId, 'teacherId');
+      where.teacherId = filters.teacherId;
     }
 
     if (filters.classId) {
-      where.classId = this.parsePositiveInt(filters.classId, 'classId');
+      where.classId = filters.classId;
     }
 
     if (filters.date) {
@@ -180,12 +171,8 @@ export class LessonsService {
     return lesson;
   }
 
-  async findJournal(userId: number, filters: JournalFilters) {
-    const classId = this.parseRequiredPositiveInt(filters.classId, 'classId');
-    const subjectId = this.parseRequiredPositiveInt(
-      filters.subjectId,
-      'subjectId',
-    );
+  async findJournal(userId: number, filters: GetJournalQueryDtoType) {
+    const { classId, subjectId } = filters;
     const teacher = await this.prisma.teacher.findUnique({
       where: {
         userId,
@@ -274,7 +261,15 @@ export class LessonsService {
     return result;
   }
 
-  private async sendHomeworkNotification(lesson: any) {
+  private async sendHomeworkNotification(lesson: {
+    id: number;
+    classId: number;
+    date: Date;
+    homework: string | null;
+    subject: {
+      name: string;
+    };
+  }) {
     if (!lesson.homework) return;
     try {
       const subjectName = lesson.subject.name;
@@ -292,24 +287,6 @@ export class LessonsService {
     } catch (err) {
       console.error('Failed to send homework notification:', err);
     }
-  }
-
-  private parsePositiveInt(value: string, field: string) {
-    const parsed = Number(value);
-
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new BadRequestException(`${field} must be a positive integer`);
-    }
-
-    return parsed;
-  }
-
-  private parseRequiredPositiveInt(value: string | undefined, field: string) {
-    if (value === undefined) {
-      throw new BadRequestException(`${field} is required`);
-    }
-
-    return this.parsePositiveInt(value, field);
   }
 
   private resolveLessonDate(date: string, slotStartTime: Date) {

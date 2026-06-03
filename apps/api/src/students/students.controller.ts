@@ -7,8 +7,8 @@ import {
 import { AttendanceService } from '@/attendance/attendance.service';
 import { GradesService } from '@/grades/grades.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { GetStudentsQueryDto } from './dto/get-students-query.dto';
 import {
-  BadRequestException,
   Controller,
   ForbiddenException,
   Get,
@@ -36,10 +36,9 @@ export class StudentsController {
   @Roles(Role.ADMIN, Role.TEACHER)
   async findAll(
     @Req() req: AuthenticatedRequest,
-    @Query('classId') classId?: string,
+    @Query() query: GetStudentsQueryDto,
   ) {
-    const parsedClassId =
-      classId === undefined ? undefined : this.parsePositiveInt(classId);
+    const parsedClassId = query.classId;
     const assignedClassIds =
       req.user.role === Role.TEACHER
         ? await this.findTeacherClassIds(req.user.id)
@@ -133,17 +132,6 @@ export class StudentsController {
     }
 
     return this.gradesService.findByStudentId(id);
-  }
-
-  //TODO: убрать дубликат parsePositiveInt
-  private parsePositiveInt(value: string) {
-    const parsed = Number(value);
-
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new BadRequestException('classId must be a positive integer');
-    }
-
-    return parsed;
   }
 
   // TODO: почему эта функция тут? разве она не должна быть в TEACHER

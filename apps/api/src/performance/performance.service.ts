@@ -1,6 +1,6 @@
+import { GetPerformanceQueryDtoType } from './dto/get-performance-query.dto';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -11,11 +11,6 @@ type AuthenticatedUser = {
   id: number;
   email: string;
   role: Role;
-};
-
-type PerformanceFilters = {
-  classId?: string;
-  subjectId?: string;
 };
 
 type SubjectTotals = {
@@ -46,12 +41,11 @@ type StudentTotals = {
 export class PerformanceService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getPerformance(user: AuthenticatedUser, filters: PerformanceFilters) {
-    const classId = this.parseRequiredPositiveInt(filters.classId, 'classId');
-    const subjectId = this.parseOptionalPositiveInt(
-      filters.subjectId,
-      'subjectId',
-    );
+  async getPerformance(
+    user: AuthenticatedUser,
+    filters: GetPerformanceQueryDtoType,
+  ) {
+    const { classId, subjectId } = filters;
 
     await this.ensureAccess(user, classId, subjectId);
 
@@ -303,28 +297,6 @@ export class PerformanceService {
     if (subjectId && teacher.subjects.length === 0) {
       throw new ForbiddenException('You can view only your own subjects');
     }
-  }
-
-  private parseRequiredPositiveInt(value: string | undefined, field: string) {
-    if (value === undefined) {
-      throw new BadRequestException(`${field} is required`);
-    }
-
-    const parsed = Number(value);
-
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new BadRequestException(`${field} must be a positive integer`);
-    }
-
-    return parsed;
-  }
-
-  private parseOptionalPositiveInt(value: string | undefined, field: string) {
-    if (value === undefined) {
-      return undefined;
-    }
-
-    return this.parseRequiredPositiveInt(value, field);
   }
 
   private toAverage(sum: number, count: number) {

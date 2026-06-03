@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { innerApi } from '@/lib/api';
 
 type NotificationType =
@@ -174,8 +174,8 @@ export function NotificationsView() {
           </div>
           <CardTitle className="mb-1">All caught up!</CardTitle>
           <p className="text-sm text-muted-foreground max-w-sm">
-            You don't have any notifications at the moment. We'll let you know
-            when new updates arrive.
+            You don&apos;t have any notifications at the moment. We&apos;ll let
+            you know when new updates arrive.
           </p>
         </Card>
       ) : (
