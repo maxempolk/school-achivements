@@ -11,7 +11,7 @@ const accessTokenCookie = 'access_token';
 const refreshTokenCookie = 'refresh_token';
 
 const roleHomePath: Record<Role, string> = {
-  ADMIN: '/admin',
+  ADMIN: '/admin/users',
   TEACHER: '/teacher/schedule',
   STUDENT: '/student/diary',
   PARENT: '/parent/diary',

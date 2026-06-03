@@ -5,7 +5,6 @@ import {
   BookOpen,
   CalendarDays,
   DoorOpen,
-  LayoutDashboard,
   School,
   UsersRound,
 } from 'lucide-react';
@@ -14,11 +13,6 @@ import { AdminNavItem } from '@/components/admin/admin-nav-item';
 import { cn } from '@/lib/utils';
 
 const navigationItems = [
-  {
-    title: 'Dashboard',
-    href: '/admin',
-    icon: LayoutDashboard,
-  },
   {
     title: 'Users',
     href: '/admin/users',

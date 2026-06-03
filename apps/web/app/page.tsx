@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 type Role = 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
 
 const roleHomePath: Record<Role, string> = {
-  ADMIN: '/admin',
+  ADMIN: '/admin/users',
   TEACHER: '/teacher/schedule',
   STUDENT: '/student/diary',
   PARENT: '/parent/diary',
