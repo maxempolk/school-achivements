@@ -1,3 +1,4 @@
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   BadRequestException,
@@ -13,13 +14,6 @@ import { GetLessonsQueryDtoType } from './dto/get-lessons-query.dto';
 import { GetJournalQueryDtoType } from './dto/get-journal-query.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-
-// TODO: вроде как где то уже есть такой тип.
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
 
 @Injectable()
 export class LessonsService {

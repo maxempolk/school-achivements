@@ -6,13 +6,10 @@ import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import { AuthenticatedUser } from '../types';
 
 export type AuthenticatedRequest = Request & {
-  user: {
-    id: number;
-    email: string;
-    role: Role;
-  };
+  user: AuthenticatedUser;
 };
 
 @Injectable()

@@ -1,3 +1,4 @@
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   ForbiddenException,
@@ -8,12 +9,6 @@ import { Role } from '@prisma/client';
 
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
-
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
 
 @Injectable()
 export class SubjectsService {
@@ -45,13 +40,7 @@ export class SubjectsService {
   }
 
   async findOne(user: AuthenticatedUser, id: number) {
-    const subject = await this.prisma.subject.findUnique({
-      where: { id },
-    });
-
-    if (!subject) {
-      throw new NotFoundException('Subject not found');
-    }
+    const subject = await this.findOneForAdmin(id);
 
     if (user.role === Role.TEACHER) {
       const assignment = await this.prisma.teacherSubject.findFirst({

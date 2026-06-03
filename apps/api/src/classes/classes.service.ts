@@ -1,3 +1,4 @@
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   ForbiddenException,
@@ -8,12 +9,6 @@ import { Role } from '@prisma/client';
 
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
-
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
 
 @Injectable()
 export class ClassesService {
@@ -45,13 +40,7 @@ export class ClassesService {
   }
 
   async findOne(user: AuthenticatedUser, id: number) {
-    const classEntity = await this.prisma.class.findUnique({
-      where: { id },
-    });
-
-    if (!classEntity) {
-      throw new NotFoundException('Class not found');
-    }
+    const classEntity = await this.findOneForAdmin(id);
 
     if (user.role === Role.TEACHER) {
       const assignment = await this.prisma.teacherClass.findFirst({

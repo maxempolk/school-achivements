@@ -1,3 +1,4 @@
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   BadRequestException,
@@ -10,13 +11,6 @@ import { Prisma, Role, WeekType, NotificationType } from '@prisma/client';
 import { CreateScheduleSlotDto } from './dto/create-schedule-slot.dto';
 import { UpdateScheduleSlotDto } from './dto/update-schedule-slot.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-
-// TODO: как будто бы где то было)))
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
 
 type ScheduleSlotConflictCandidate = {
   classId: number;

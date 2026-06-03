@@ -1,4 +1,5 @@
 import { GetPerformanceQueryDtoType } from './dto/get-performance-query.dto';
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   ForbiddenException,
@@ -6,12 +7,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
-
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
 
 type SubjectTotals = {
   subject: {

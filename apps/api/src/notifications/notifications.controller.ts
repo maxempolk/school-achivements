@@ -13,12 +13,7 @@ import { Role } from '@prisma/client';
 import type { Request } from 'express';
 
 import { NotificationsService } from './notifications.service';
-
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
+import { AuthenticatedUser } from '@/auth/types';
 
 @ApiTags('notifications')
 @Controller('notifications')

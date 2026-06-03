@@ -1,3 +1,4 @@
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   ForbiddenException,
@@ -13,12 +14,6 @@ import {
 
 import { CreateGradeDto } from './dto/create-grade.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-
-type AuthenticatedUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
 
 @Injectable()
 export class GradesService {
