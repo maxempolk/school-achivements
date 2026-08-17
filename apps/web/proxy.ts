@@ -108,7 +108,7 @@ function getRequiredRole(pathname: string) {
   })?.role;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const accessToken = req.cookies.get(accessTokenCookie)?.value;
   const refreshToken = req.cookies.get(refreshTokenCookie)?.value;
   const { pathname } = req.nextUrl;

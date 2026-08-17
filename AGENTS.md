@@ -103,6 +103,8 @@
 - Testing/deployment
   - API Jest scaffold exists.
   - Playwright e2e school flow covers admin setup, teacher schedule-slot lesson start, grading, and student grade visibility.
+  - `GET /health` returns an unauthenticated API health status for deployment checks.
+  - GitHub Actions runs installation, Prisma generation, linting, unit tests and production builds on pull requests and `main`.
   - README documents Vercel/Railway deployment.
 
 ## Data Model Summary
@@ -206,6 +208,8 @@
 
 - Install:
   - `pnpm install`
+  - copy `apps/api/.env.example` to `apps/api/.env`
+  - copy `apps/web/.env.local.example` to `apps/web/.env.local`
 - Local infrastructure:
   - `pnpm infra`
   - `pnpm infra:down`
