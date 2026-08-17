@@ -1,5 +1,7 @@
 # School Achievements
 
+[Українська версія документації](docs/uk/README.md)
+
 [![Live Demo](https://img.shields.io/badge/live%20demo-open%20app-2ea44f?style=for-the-badge)](https://school-achivements-web.vercel.app)
 [![CI](https://github.com/maxempolk/school-achivements/actions/workflows/ci.yml/badge.svg)](https://github.com/maxempolk/school-achivements/actions/workflows/ci.yml)
 
