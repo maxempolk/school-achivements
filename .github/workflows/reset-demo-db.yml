@@ -1,0 +1,42 @@
+name: Reset demo database
+
+on:
+  schedule:
+    # Nightly reset ~03:40 UTC. Off the :00/:30 marks to avoid the cron rush.
+    - cron: '40 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reset-demo-db
+  cancel-in-progress: false
+
+jobs:
+  reset-demo-db:
+    # Skip silently if the database secret has not been configured yet.
+    if: ${{ secrets.DEMO_DATABASE_URL != '' }}
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter api db:generate
+
+      # Drops the database, re-applies all migrations and runs the seed.
+      - name: Reset schema and reseed demo data
+        working-directory: apps/api
+        run: pnpm exec prisma migrate reset --force
