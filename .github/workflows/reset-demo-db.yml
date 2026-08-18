@@ -41,7 +41,12 @@ jobs:
 
       - run: pnpm --filter api db:generate
 
-      # Drops the database, re-applies all migrations and runs the seed.
-      - name: Reset schema and reseed demo data
+      # Drops the database and re-applies all migrations.
+      # Prisma 7 does not auto-run the seed on reset, so it is a separate step.
+      - name: Reset schema
         working-directory: apps/api
         run: pnpm exec prisma migrate reset --force
+
+      - name: Seed demo data
+        working-directory: apps/api
+        run: pnpm exec tsx prisma/seed.ts
