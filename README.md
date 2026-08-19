@@ -7,17 +7,25 @@
 
 School Achievements is a full-stack school management application for tracking users and achievement-related workflows. The project is built as a monorepo with a Next.js frontend, NestJS backend, shared validation/types package, and PostgreSQL database access through Prisma.
 
-## Demo Account
+## Demo Accounts
 
-Use this account to explore the deployed demonstration only:
+All demo accounts use the password `admin123`.
 
-```text
-Email: admin@test.com
-Password: admin123
-```
+| Email                                 | Role                                  |
+| ------------------------------------- | ------------------------------------- |
+| admin@test.com                        | Admin                                 |
+| teacher1@test.com                     | Teacher (Mathematics)                 |
+| teacher2@test.com                     | Teacher (Ukrainian Language, History) |
+| student1@test.com … student5@test.com | Students                              |
+| parent1@test.com                      | Parent                                |
 
-The account is seeded for a public demo. Do not reuse these credentials in a
-real deployment.
+These accounts are seeded for a public demo. Do not reuse these credentials in
+a real deployment.
+
+> Note: the demo runs on free hosting tiers, so after a period of inactivity
+> the backend may take up to a minute to respond while it warms up. The demo
+> database is automatically reset to its initial state every night, so any
+> changes you make are temporary.
 
 ## Tech Stack
 
@@ -25,7 +33,7 @@ real deployment.
 - **Backend:** NestJS, Passport JWT, Prisma
 - **Database:** PostgreSQL
 - **Shared package:** Zod schemas and shared TypeScript types
-- **Deployment:** Vercel for web, Railway for API
+- **Deployment:** Vercel for web, Render for API, Neon for PostgreSQL
 
 ## Project Structure
 
@@ -39,7 +47,7 @@ packages/
 
 ## Authentication
 
-Authentication uses a same-origin Next.js proxy to avoid cross-site cookie issues between Vercel and Railway.
+Authentication uses a same-origin Next.js proxy to avoid cross-site cookie issues between Vercel and Render.
 
 - Login request: `/api/auth/login`
 - Protected backend proxy: `/api/backend/[...path]`
@@ -106,12 +114,12 @@ API_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
-In production, `API_URL` should point to the Railway API URL and `FRONTEND_URL` should point to the deployed Vercel frontend.
+In production, `API_URL` should point to the Render API URL and `FRONTEND_URL` should point to the deployed Vercel frontend.
 
 ## Deployment
 
 - Frontend is deployed on Vercel: https://school-achivements-web.vercel.app
-- Backend is deployed on Railway.
+- Backend is deployed on Render (free tier).
 
 Before deploying, run:
 

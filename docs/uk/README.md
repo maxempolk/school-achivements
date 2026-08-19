@@ -7,17 +7,25 @@ School Achievements — full-stack застосунок для керуванн�
 як монорепозиторій: Next.js frontend, NestJS backend, спільний пакет валідації
 та типів і PostgreSQL через Prisma.
 
-## Демо-акаунт
+## Демо-акаунти
 
-Використовуйте цей обліковий запис лише для перегляду публічного демо:
+Усі демо-акаунти використовують пароль `admin123`.
 
-```text
-Email: admin@test.com
-Password: admin123
-```
+| Email                                 | Роль                               |
+| ------------------------------------- | ---------------------------------- |
+| admin@test.com                        | Адміністратор                      |
+| teacher1@test.com                     | Вчитель (Математика)               |
+| teacher2@test.com                     | Вчитель (Українська мова, Історія) |
+| student1@test.com … student5@test.com | Учні                               |
+| parent1@test.com                      | Батьки                             |
 
-Цей акаунт заповнений тестовими даними. Не використовуйте ці облікові дані в
-реальному розгортанні.
+Ці акаунти заповнені тестовими даними для публічного демо. Не використовуйте
+ці облікові дані в реальному розгортанні.
+
+> Примітка: демо працює на безкоштовних тарифах хостингу, тому після періоду
+> неактивності backend може відповідати до хвилини, поки «прогрівається».
+> Демо-база автоматично скидається до початкового стану щоночі, тому будь-які
+> внесені зміни є тимчасовими.
 
 ## Технології
 
@@ -25,7 +33,7 @@ Password: admin123
 - **Backend:** NestJS, Passport JWT, Prisma
 - **База даних:** PostgreSQL
 - **Спільний пакет:** Zod-схеми та TypeScript-типи
-- **Розгортання:** Vercel для web і Railway для API
+- **Розгортання:** Vercel для web, Render для API, Neon для PostgreSQL
 
 ## Структура проєкту
 
@@ -40,7 +48,7 @@ packages/
 ## Автентифікація
 
 Автентифікація використовує same-origin Next.js proxy, щоб уникнути проблем із
-cross-site cookies між Vercel і Railway.
+cross-site cookies між Vercel і Render.
 
 - Запит входу: `/api/auth/login`
 - Proxy до захищеного backend: `/api/backend/[...path]`
@@ -107,13 +115,13 @@ API_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
-У production `API_URL` має вказувати на Railway API, а `FRONTEND_URL` — на
+У production `API_URL` має вказувати на Render API, а `FRONTEND_URL` — на
 розгорнутий Vercel frontend.
 
 ## Розгортання
 
 - Frontend розгорнуто на Vercel: https://school-achivements-web.vercel.app
-- Backend розгортається на Railway.
+- Backend розгорнуто на Render (безкоштовний тариф).
 
 Перед розгортанням виконайте:
 
