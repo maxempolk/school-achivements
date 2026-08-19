@@ -56,8 +56,15 @@
 - Admin
   - CRUD screens for users, classes, subjects, classrooms, and schedule slots.
   - User creation creates teacher/student/parent profiles when applicable.
+  - Regular admins manage teachers/students/parents only; they cannot create, edit, or delete admin accounts (including their own).
   - Parent-child linking through `ParentStudent`.
   - Teacher assignment management through `TeacherClass` and `TeacherSubject`.
+- Super admin
+  - `User.isSuperAdmin` boolean flag (not a separate `Role`); super admins are ADMIN users and use the same admin UI.
+  - Bootstrapped by seed: `db:seed` and `db:seed:admin` upsert `admin@test.com` with the flag.
+  - Only super admins can create, edit, delete, and promote/demote admin accounts, and grant/revoke the super admin flag.
+  - No user can delete their own account; the last super admin cannot be deleted or demoted.
+  - The flag is included in the JWT access token payload and returned by `GET /users` and `GET /users/me`.
 - Teacher
   - Teacher schedule view.
   - Teacher class journal view for class/subject lesson columns.
@@ -115,6 +122,7 @@
   - `WeekType`: `ODD`, `EVEN`, `EVERY`.
 - `User`
   - Unique `email`, `password`, `role`.
+  - `isSuperAdmin` boolean (default `false`) elevates an ADMIN user to manage other admins.
   - Optional one-to-one profiles: `Teacher`, `Student`, `Parent`.
   - Has many `RefreshTokenSession`.
 - `Teacher`
@@ -185,6 +193,7 @@
 - Protected frontend requests go through the Next.js same-origin proxy to avoid cross-site cookie issues.
 - Access and refresh tokens are stored as HttpOnly cookies by the web app.
 - Backend role checks are implemented with `@Roles`, `JwtAuthGuard`, and `RolesGuard`.
+- Admin account protection is enforced in `UsersService`: self-deletion is forbidden for everyone, regular admins cannot create/edit/delete ADMIN users, only `isSuperAdmin` users can, and the last super admin cannot be deleted or demoted. Super admin is a flag on an ADMIN user, not a separate role, so existing role guards and frontend routing work unchanged.
 - Schedule slots are the source for normal teacher lesson creation.
 - Admin can create a lesson directly; teachers start lessons from their assigned schedule slots.
 - Schedule conflict validation happens before creating or updating a slot.

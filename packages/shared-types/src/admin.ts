@@ -15,7 +15,9 @@ export const createUserSchema = z.object({
   profile: userProfileSchema.optional(),
 });
 
-export const updateUserSchema = createUserSchema.partial();
+export const updateUserSchema = createUserSchema.partial().extend({
+  isSuperAdmin: z.boolean().optional(),
+});
 
 export const createClassSchema = z.object({
   name: z.string().trim().min(1),

@@ -69,11 +69,15 @@ async function main() {
     where: {
       email: 'admin@test.com',
     },
-    update: {},
+    update: {
+      role: Role.ADMIN,
+      isSuperAdmin: true,
+    },
     create: {
       email: 'admin@test.com',
       password: passwordHash,
       role: Role.ADMIN,
+      isSuperAdmin: true,
     },
   });
 

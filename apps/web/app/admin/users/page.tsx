@@ -21,11 +21,20 @@ import { TableSkeletonRows } from '@/components/ui/table-skeleton';
 import { innerApi } from '@/lib/api';
 
 const usersQueryKey = ['admin', 'users'] as const;
+const currentUserQueryKey = ['admin', 'me'] as const;
+
+type CurrentUser = {
+  id: number;
+  email: string;
+  role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
+  isSuperAdmin: boolean;
+};
 
 type AdminUser = {
   id: number;
   email: string;
   role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
+  isSuperAdmin: boolean;
   teacher: {
     id: number;
     firstName: string;
@@ -57,6 +66,12 @@ async function getUsers() {
   return response.data;
 }
 
+async function getCurrentUser() {
+  const response = await innerApi.get<CurrentUser>('/api/backend/users/me');
+
+  return response.data;
+}
+
 export default function AdminUsersPage() {
   const {
     data = [],
@@ -66,6 +81,16 @@ export default function AdminUsersPage() {
     queryKey: usersQueryKey,
     queryFn: getUsers,
   });
+  const { data: currentUser } = useQuery({
+    queryKey: currentUserQueryKey,
+    queryFn: getCurrentUser,
+  });
+
+  const isSuperAdmin = currentUser?.isSuperAdmin === true;
+
+  function canManageUser(target: AdminUser) {
+    return isSuperAdmin || target.role !== 'ADMIN';
+  }
 
   const pagination = useAdminPagination({
     items: data,
@@ -81,7 +106,11 @@ export default function AdminUsersPage() {
             Manage school accounts and access roles.
           </p>
         </div>
-        <UserFormDialog mode="create" queryKey={usersQueryKey} />
+        <UserFormDialog
+          mode="create"
+          queryKey={usersQueryKey}
+          viewerIsSuperAdmin={isSuperAdmin}
+        />
       </div>
 
       <Card>
@@ -137,6 +166,11 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 font-medium">{user.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {user.role}
+                      {user.isSuperAdmin ? (
+                        <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                          Super
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1">
@@ -152,16 +186,21 @@ export default function AdminUsersPage() {
                             queryKey={usersQueryKey}
                           />
                         ) : null}
-                        <UserFormDialog
-                          mode="edit"
-                          queryKey={usersQueryKey}
-                          user={user}
-                        />
-                        <AdminDeleteButton
-                          endpoint={`/api/backend/users/${user.id}`}
-                          entityName="User"
-                          queryKey={usersQueryKey}
-                        />
+                        {canManageUser(user) ? (
+                          <UserFormDialog
+                            mode="edit"
+                            queryKey={usersQueryKey}
+                            user={user}
+                            viewerIsSuperAdmin={isSuperAdmin}
+                          />
+                        ) : null}
+                        {canManageUser(user) && user.id !== currentUser?.id ? (
+                          <AdminDeleteButton
+                            endpoint={`/api/backend/users/${user.id}`}
+                            entityName="User"
+                            queryKey={usersQueryKey}
+                          />
+                        ) : null}
                       </div>
                     </td>
                   </tr>

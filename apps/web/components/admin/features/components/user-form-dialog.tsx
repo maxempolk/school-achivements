@@ -10,7 +10,7 @@ import {
   type UpdateUserInput,
 } from '@school/shared-types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { UserProfileFields } from '@/components/admin/features/components/user-profile-fields';
@@ -41,6 +41,7 @@ type AdminUser = {
   id: number;
   email: string;
   role: CreateUserInput['role'];
+  isSuperAdmin: boolean;
   teacher: {
     firstName: string;
     lastName: string;
@@ -58,6 +59,7 @@ type UserFormDialogProps = {
   mode: 'create' | 'edit';
   queryKey: readonly unknown[];
   user?: AdminUser;
+  viewerIsSuperAdmin?: boolean;
 };
 
 const roleOptions = roleSchema.options;
@@ -75,9 +77,13 @@ function getEmptyProfileForRole(role: UserRole) {
   };
 }
 
-function getDefaultValues(isEdit: boolean, user?: AdminUser): UserFormValues {
+function getDefaultValues(
+  isEdit: boolean,
+  viewerIsSuperAdmin: boolean,
+  user?: AdminUser,
+): UserFormValues {
   if (isEdit) {
-    const role = user?.role ?? 'ADMIN';
+    const role = user?.role ?? 'TEACHER';
     const profile =
       role === 'TEACHER'
         ? {
@@ -104,21 +110,35 @@ function getDefaultValues(isEdit: boolean, user?: AdminUser): UserFormValues {
   return {
     email: '',
     password: '',
-    role: 'ADMIN',
+    role: viewerIsSuperAdmin ? 'ADMIN' : 'TEACHER',
     profile: undefined,
   };
 }
 
-export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
+export function UserFormDialog({
+  mode,
+  queryKey,
+  user,
+  viewerIsSuperAdmin = false,
+}: UserFormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isSuperAdminFlag, setIsSuperAdminFlag] = useState(false);
   const queryClient = useQueryClient();
   const isEdit = mode === 'edit';
+  const availableRoleOptions = viewerIsSuperAdmin
+    ? roleOptions
+    : roleOptions.filter((role) => role !== 'ADMIN');
 
   const form = useForm<UserFormValues>({
-    resolver: standardSchemaResolver(
+    resolver: standardSchemaResolver<UserFormValues, unknown, UserFormValues>(
       isEdit ? updateUserSchema : createUserSchema,
     ),
-    defaultValues: getDefaultValues(isEdit, user),
+    defaultValues: getDefaultValues(isEdit, viewerIsSuperAdmin, user),
+  });
+
+  const selectedRole = useWatch({
+    control: form.control,
+    name: 'role',
   });
 
   useEffect(() => {
@@ -126,8 +146,16 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
       return;
     }
 
-    form.reset(getDefaultValues(isEdit, user));
-  }, [form, isEdit, open, user]);
+    form.reset(getDefaultValues(isEdit, viewerIsSuperAdmin, user));
+  }, [form, isEdit, open, user, viewerIsSuperAdmin]);
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setIsSuperAdminFlag(user?.isSuperAdmin ?? false);
+    }
+
+    setOpen(nextOpen);
+  }
 
   const mutation = useMutation({
     mutationFn: async (values: UserFormValues) => {
@@ -158,11 +186,19 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
       payload.profile = undefined;
     }
 
+    if (isEdit && viewerIsSuperAdmin) {
+      mutation.mutate({
+        ...payload,
+        isSuperAdmin: payload.role === 'ADMIN' ? isSuperAdminFlag : false,
+      });
+      return;
+    }
+
     mutation.mutate(payload);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           data-testid={isEdit ? 'edit-user-button' : 'create-user-button'}
@@ -253,7 +289,7 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {roleOptions.map((role) => (
+                      {availableRoleOptions.map((role) => (
                         <SelectItem key={role} value={role}>
                           {role}
                         </SelectItem>
@@ -269,6 +305,21 @@ export function UserFormDialog({ mode, queryKey, user }: UserFormDialogProps) {
               </p>
             ) : null}
           </div>
+
+          {isEdit && viewerIsSuperAdmin && selectedRole === 'ADMIN' ? (
+            <div className="flex items-center gap-2">
+              <input
+                id={`user-super-admin-${user?.id ?? 'new'}`}
+                type="checkbox"
+                className="h-4 w-4 accent-primary"
+                checked={isSuperAdminFlag}
+                onChange={(event) => setIsSuperAdminFlag(event.target.checked)}
+              />
+              <Label htmlFor={`user-super-admin-${user?.id ?? 'new'}`}>
+                Super admin — can create, edit and delete administrators
+              </Label>
+            </div>
+          ) : null}
 
           <UserProfileFields form={form} disabled={mutation.isPending} />
 

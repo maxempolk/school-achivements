@@ -9,6 +9,7 @@ type JwtPayload = {
   sub: number;
   email: string;
   role: Role;
+  isSuperAdmin?: boolean;
 };
 
 const cookieExtractor = (req: Request): string | null => {
@@ -38,6 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: payload.sub,
       email: payload.email,
       role: payload.role,
+      isSuperAdmin: payload.isSuperAdmin ?? false,
     };
   }
 }

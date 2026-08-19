@@ -1,6 +1,7 @@
 import { Roles } from '@/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/auth/guards/roles.guard';
+import { AuthenticatedUser } from '@/auth/types';
 import {
   Body,
   Controller,
@@ -52,23 +53,27 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
-  create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  create(@Req() req: Request, @Body() dto: CreateUserDto) {
+    return this.usersService.create(req.user as AuthenticatedUser, dto);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(id, dto);
+  update(
+    @Req() req: Request,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return this.usersService.update(req.user as AuthenticatedUser, id, dto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
+  remove(@Req() req: Request, @Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(req.user as AuthenticatedUser, id);
   }
 }

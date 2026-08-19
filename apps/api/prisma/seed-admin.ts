@@ -23,15 +23,17 @@ async function main() {
     update: {
       password: passwordHash,
       role: Role.ADMIN,
+      isSuperAdmin: true,
     },
     create: {
       email: adminEmail,
       password: passwordHash,
       role: Role.ADMIN,
+      isSuperAdmin: true,
     },
   });
 
-  console.log('Admin seed completed');
+  console.log('Super admin seed completed');
   console.log(`Email: ${adminEmail}`);
   console.log(`Password: ${defaultPassword}`);
 }

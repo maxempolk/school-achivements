@@ -1,5 +1,10 @@
+import { AuthenticatedUser } from '@/auth/types';
 import { PrismaService } from '@/prisma/prisma.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -20,6 +25,7 @@ export class UsersService {
     id: true,
     email: true,
     role: true,
+    isSuperAdmin: true,
     teacher: {
       select: {
         id: true,
@@ -91,7 +97,13 @@ export class UsersService {
     return user;
   }
 
-  async create(dto: CreateUserDto) {
+  async create(requester: AuthenticatedUser, dto: CreateUserDto) {
+    if (dto.role === Role.ADMIN && !requester.isSuperAdmin) {
+      throw new ForbiddenException(
+        'Only the super admin can create administrators',
+      );
+    }
+
     const password = await bcrypt.hash(dto.password, 10);
 
     return this.prisma.$transaction(async (tx) => {
@@ -110,18 +122,49 @@ export class UsersService {
     });
   }
 
-  async update(id: number, dto: UpdateUserDto) {
-    const password = dto.password
-      ? await bcrypt.hash(dto.password, 10)
-      : undefined;
-
+  async update(requester: AuthenticatedUser, id: number, dto: UpdateUserDto) {
     return this.prisma.$transaction(async (tx) => {
+      const target = await tx.user.findUnique({ where: { id } });
+
+      if (!target) {
+        throw new NotFoundException('User not found');
+      }
+
+      const touchesAdminAccount =
+        target.role === Role.ADMIN || dto.role === Role.ADMIN;
+
+      if (touchesAdminAccount && !requester.isSuperAdmin) {
+        throw new ForbiddenException(
+          'Only the super admin can manage administrators',
+        );
+      }
+
+      if (dto.isSuperAdmin !== undefined && !requester.isSuperAdmin) {
+        throw new ForbiddenException(
+          'Only the super admin can grant or revoke the super admin flag',
+        );
+      }
+
+      const losesSuperAdminStatus =
+        target.isSuperAdmin &&
+        (dto.isSuperAdmin === false ||
+          (dto.role !== undefined && dto.role !== Role.ADMIN));
+
+      if (losesSuperAdminStatus) {
+        await this.ensureNotLastSuperAdmin(tx);
+      }
+
+      const password = dto.password
+        ? await bcrypt.hash(dto.password, 10)
+        : undefined;
+
       const user = await tx.user.update({
         where: { id },
         data: {
           email: dto.email,
           password,
           role: dto.role,
+          isSuperAdmin: dto.isSuperAdmin,
         },
         select: this.publicUserSelect,
       });
@@ -134,13 +177,45 @@ export class UsersService {
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(requester: AuthenticatedUser, id: number) {
+    if (requester.id === id) {
+      throw new ForbiddenException('You cannot delete your own account');
+    }
+
+    const target = await this.findById(id);
+
+    if (!target) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (target.role === Role.ADMIN && !requester.isSuperAdmin) {
+      throw new ForbiddenException(
+        'Only the super admin can manage administrators',
+      );
+    }
+
+    if (target.isSuperAdmin) {
+      await this.ensureNotLastSuperAdmin(this.prisma);
+    }
 
     return this.prisma.user.delete({
       where: { id },
       select: this.publicUserSelect,
     });
+  }
+
+  private async ensureNotLastSuperAdmin(
+    client: PrismaService | Prisma.TransactionClient,
+  ) {
+    const superAdminCount = await client.user.count({
+      where: { isSuperAdmin: true },
+    });
+
+    if (superAdminCount <= 1) {
+      throw new ForbiddenException(
+        'Cannot remove or demote the last super admin',
+      );
+    }
   }
 
   private async createProfileForRole(

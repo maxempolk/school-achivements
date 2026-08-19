@@ -67,6 +67,7 @@ export class AuthService {
             id: true,
             email: true,
             role: true,
+            isSuperAdmin: true,
           },
         },
       },
@@ -82,6 +83,7 @@ export class AuthService {
       id: session.user.id,
       email: session.user.email,
       role: session.user.role,
+      isSuperAdmin: session.user.isSuperAdmin,
     };
 
     return {
@@ -110,12 +112,18 @@ export class AuthService {
     return { success: true };
   }
 
-  private createAccessToken(user: { id: number; email: string; role: string }) {
+  private createAccessToken(user: {
+    id: number;
+    email: string;
+    role: string;
+    isSuperAdmin: boolean;
+  }) {
     return this.jwtService.sign(
       {
         sub: user.id,
         email: user.email,
         role: user.role,
+        isSuperAdmin: user.isSuperAdmin,
       },
       {
         expiresIn: ACCESS_TOKEN_EXPIRES_IN,
