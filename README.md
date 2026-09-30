@@ -1,13 +1,35 @@
 # School Achievements
 
-[Українська версія документації](docs/uk/README.md)
+Full-stack school management app with role-based workflows for administrators, teachers, students and parents.
 
-[![Live Demo](https://img.shields.io/badge/live%20demo-open%20app-2ea44f?style=for-the-badge)](https://school-achivements-web.vercel.app)
+[Live Demo](https://school-achivements-web.vercel.app) · [Source](https://github.com/maxempolk/school-achivements) · [Українська документація](docs/uk/README.md)
+
 [![CI](https://github.com/maxempolk/school-achivements/actions/workflows/ci.yml/badge.svg)](https://github.com/maxempolk/school-achivements/actions/workflows/ci.yml)
 
-School Achievements is a full-stack school management application for tracking users and achievement-related workflows. The project is built as a monorepo with a Next.js frontend, NestJS backend, shared validation/types package, and PostgreSQL database access through Prisma.
+## About
 
-## Demo Accounts
+School Achievements brings school administration and classroom work into one application. Administrators set up users, classes and subjects; teachers manage lessons and grades; students can view their results. The monorepo connects a Next.js frontend to a NestJS API and a PostgreSQL database.
+
+## Highlights
+
+- Role-based flows for administrators, teachers, students and parents.
+- School setup, teacher assignments, schedules, lessons and grades, including an end-to-end Playwright flow from administration to a student's grade view.
+- Shared Zod schemas and TypeScript types across the frontend and API.
+- Same-origin API proxy and `HttpOnly` authentication cookie; CI covers linting, tests and production builds.
+
+## Tech Stack
+
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend:** NestJS, Passport JWT, Prisma
+- **Database:** PostgreSQL
+- **Shared package:** Zod schemas and shared TypeScript types
+- **Testing and deployment:** Playwright, CI, Vercel, Render, Neon
+
+## Live Demo
+
+Open the [public demo](https://school-achivements-web.vercel.app). The backend may take up to a minute to wake after inactivity. Demo data resets nightly, so changes are temporary.
+
+### Demo accounts
 
 All demo accounts use the password `admin123`.
 
@@ -21,19 +43,6 @@ All demo accounts use the password `admin123`.
 
 These accounts are seeded for a public demo. Do not reuse these credentials in
 a real deployment.
-
-> Note: the demo runs on free hosting tiers, so after a period of inactivity
-> the backend may take up to a minute to respond while it warms up. The demo
-> database is automatically reset to its initial state every night, so any
-> changes you make are temporary.
-
-## Tech Stack
-
-- **Frontend:** Next.js, React, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend:** NestJS, Passport JWT, Prisma
-- **Database:** PostgreSQL
-- **Shared package:** Zod schemas and shared TypeScript types
-- **Deployment:** Vercel for web, Render for API, Neon for PostgreSQL
 
 ## Project Structure
 
