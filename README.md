@@ -10,6 +10,21 @@ Full-stack school management app with role-based workflows for administrators, t
 
 School Achievements brings school administration and classroom work into one application. Administrators set up users, classes and subjects; teachers manage lessons and grades; students can view their results. The monorepo connects a Next.js frontend to a NestJS API and a PostgreSQL database.
 
+## Screenshots
+
+Captured from a local build using the project's seeded demo accounts.
+
+**Student diary:** grades, homework, upcoming lessons and attendance.
+
+![Student diary with seeded school data](docs/screenshots/student-diary.jpg)
+
+<details>
+<summary>Admin users and role management</summary>
+
+![School administrator managing demo users and roles](docs/screenshots/admin-users.jpg)
+
+</details>
+
 ## Highlights
 
 - Role-based flows for administrators, teachers, students and parents.
